@@ -1,0 +1,41 @@
+[gd_scene load_steps=6 format=3 uid="uid://player_necromancer"]
+
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/summoning/resurrection_controller.gd" id="3_resurrection"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 10.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_resurrection"]
+radius = 72.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_player")
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.25, 0.06, 0.31, 1)
+polygon = PackedVector2Array(0, -14, 10, 7, 0, 14, -10, 7)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 18
+
+[node name="ResurrectionController" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("3_resurrection")
+
+[node name="ResurrectionRange" type="CollisionShape2D" parent="ResurrectionController"]
+shape = SubResource("CircleShape2D_resurrection")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
+zoom = Vector2(3, 3)
+enabled = true

@@ -1,0 +1,5 @@
+.godot/
+.vscode/
+Godot_*.exe
+*.tmp
+*.log

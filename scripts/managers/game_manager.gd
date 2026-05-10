@@ -13,12 +13,17 @@ signal skeleton_cap_changed(current_count: int, max_count: int)
 signal essence_changed(essence: int)
 signal enemy_killed(enemy: Node2D, source: Node)
 signal progression_reward_applied(message: String)
+signal attack_commanded(target: Node2D)
+signal attack_command_cleared
+signal skeleton_command_changed(mode: String)
 
 const SKELETON_SCENE: PackedScene = preload("res://scenes/skeletons/skeleton.tscn")
 const CORPSE_SCENE: PackedScene = preload("res://scenes/world/corpse.tscn")
 
 var player: Node2D
 var player_stats: Node
+var commanded_attack_target: Node2D
+var skeleton_command_mode: String = "follow"
 var enemies: Array[Node2D] = []
 var corpses: Array[Node2D] = []
 var skeletons: Array[Node2D] = []
@@ -48,6 +53,25 @@ func _sync_from_player_stats() -> void:
 
 	skeleton_cap = player_stats.get_skeleton_cap()
 	skeleton_cap_changed.emit(get_skeleton_count(), skeleton_cap)
+
+
+func command_attack_target(target: Node2D) -> void:
+	commanded_attack_target = target
+	attack_commanded.emit(target)
+
+
+func clear_attack_command() -> void:
+	commanded_attack_target = null
+	attack_command_cleared.emit()
+
+
+func set_skeleton_command_mode(mode: String) -> void:
+	if mode not in ["follow", "hold", "attack"]:
+		return
+
+	skeleton_command_mode = mode
+	skeleton_command_changed.emit(mode)
+	print("Skeleton command: %s" % mode)
 
 
 func register_enemy(enemy: Node2D) -> void:
@@ -95,25 +119,32 @@ func can_spawn_skeleton() -> bool:
 	return get_skeleton_count() < skeleton_cap
 
 
-func spawn_skeleton(spawn_position: Vector2) -> Node2D:
+func spawn_skeleton(spawn_position: Vector2, corpse_level: int = 1) -> Node2D:
 	if not can_spawn_skeleton():
 		print("Skeleton cap reached: %d/%d" % [get_skeleton_count(), skeleton_cap])
 		return null
 
 	var skeleton := SKELETON_SCENE.instantiate() as Node2D
 	skeleton.global_position = spawn_position
-	get_tree().current_scene.add_child(skeleton)
 	if player_stats != null and "attack_damage" in skeleton:
-		skeleton.attack_damage += player_stats.get_skeleton_damage_bonus()
+		skeleton.attack_damage += player_stats.get_skeleton_damage_bonus() + maxi(corpse_level - 1, 0)
+		if "attack_cooldown" in skeleton:
+			skeleton.attack_cooldown = maxf(0.45, skeleton.attack_cooldown - player_stats.get_skeleton_attack_speed_bonus())
+		var skeleton_health := get_health_component(skeleton)
+		if skeleton_health != null:
+			skeleton_health.max_health += player_stats.get_skeleton_health_bonus() + (maxi(corpse_level - 1, 0) * 3)
+	get_tree().current_scene.add_child(skeleton)
 	register_skeleton(skeleton)
 	skeleton_spawned.emit(skeleton)
 	print("Resurrected skeleton at %s" % skeleton.global_position)
 	return skeleton
 
 
-func spawn_corpse(spawn_position: Vector2) -> Node2D:
+func spawn_corpse(spawn_position: Vector2, corpse_level: int = 1) -> Node2D:
 	var corpse := CORPSE_SCENE.instantiate() as Node2D
 	corpse.global_position = spawn_position
+	if "corpse_level" in corpse:
+		corpse.corpse_level = corpse_level
 	get_tree().current_scene.add_child(corpse)
 	corpse_spawned.emit(corpse)
 	print("Spawned corpse at %s" % corpse.global_position)
@@ -127,6 +158,7 @@ func record_enemy_kill(enemy: Node2D, source: Node, experience_reward: int = 1) 
 	essence_changed.emit(essence)
 	if player_stats != null:
 		player_stats.add_experience(experience_reward)
+		player_stats.restore_black_mana(1)
 	print("Enemy killed. Essence: %d. Reward progress: %d/%d" % [essence, kills_since_reward, kills_per_reward])
 
 	if kills_since_reward >= kills_per_reward:
@@ -138,9 +170,68 @@ func _apply_progression_reward() -> void:
 	var player_health := get_health_component(player)
 	if player_health != null:
 		player_health.heal(3)
-	var message := "Dark vitality restored"
+	var message := "HP restored"
 	print(message)
 	progression_reward_applied.emit(message)
+
+
+func save_game() -> void:
+	if player_stats == null:
+		return
+
+	var data := {
+		"player_position": [player.global_position.x, player.global_position.y] if player != null else [0, 0],
+		"level": player_stats.level,
+		"experience": player_stats.experience,
+		"stat_points": player_stats.stat_points,
+		"hp": player_stats.hp,
+		"black_mana": player_stats.black_mana,
+		"current_black_mana": player_stats.current_black_mana,
+		"army_size": player_stats.army_size,
+		"movement_speed": player_stats.movement_speed,
+		"skeleton_count": get_skeleton_count()
+	}
+	var file := FileAccess.open("user://necromancer_save.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify(data))
+	print("Game saved")
+
+
+func load_game() -> void:
+	if not FileAccess.file_exists("user://necromancer_save.json") or player_stats == null:
+		return
+
+	var file := FileAccess.open("user://necromancer_save.json", FileAccess.READ)
+	var data := JSON.parse_string(file.get_as_text()) as Dictionary
+	if data.is_empty():
+		return
+
+	player_stats.level = int(data.get("level", player_stats.level))
+	player_stats.experience = int(data.get("experience", player_stats.experience))
+	player_stats.stat_points = int(data.get("stat_points", player_stats.stat_points))
+	player_stats.hp = int(data.get("hp", player_stats.hp))
+	player_stats.black_mana = int(data.get("black_mana", player_stats.black_mana))
+	player_stats.current_black_mana = int(data.get("current_black_mana", player_stats.current_black_mana))
+	player_stats.army_size = int(data.get("army_size", player_stats.army_size))
+	player_stats.movement_speed = int(data.get("movement_speed", player_stats.movement_speed))
+	player_stats._emit_all()
+	if player != null:
+		var pos: Array = data.get("player_position", [0, 0])
+		player.global_position = Vector2(float(pos[0]), float(pos[1]))
+		_restore_saved_army(int(data.get("skeleton_count", 0)))
+	print("Game loaded")
+
+
+func _restore_saved_army(saved_skeleton_count: int) -> void:
+	var existing_skeletons := skeletons.duplicate()
+	for skeleton in existing_skeletons:
+		if is_instance_valid(skeleton):
+			skeleton.queue_free()
+	skeletons.clear()
+
+	var restore_count := mini(saved_skeleton_count, skeleton_cap)
+	for index in restore_count:
+		var angle := TAU * float(index) / maxf(float(restore_count), 1.0)
+		spawn_skeleton(player.global_position + (Vector2(cos(angle), sin(angle)) * 42.0))
 
 
 func get_health_component(unit: Node) -> HealthComponent:

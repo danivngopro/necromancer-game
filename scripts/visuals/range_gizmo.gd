@@ -5,7 +5,7 @@ extends Node2D
 @export var attack_range: float = 0.0
 @export var detection_color: Color = Color(0.1, 0.65, 1.0, 0.2)
 @export var attack_color: Color = Color(1.0, 0.25, 0.1, 0.35)
-@export var enabled: bool = true
+@export var enabled: bool = false
 
 func _ready() -> void:
 	z_index = 20

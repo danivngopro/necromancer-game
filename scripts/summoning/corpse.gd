@@ -6,6 +6,7 @@ signal expired(corpse: Corpse)
 
 @export var skeleton_spawn_offset: Vector2 = Vector2(0, -12)
 @export var lifetime_seconds: float = 12.0
+@export var corpse_level: int = 1
 
 @onready var body: CanvasItem = $Body
 @onready var highlight: CanvasItem = get_node_or_null("Highlight") as CanvasItem
@@ -38,10 +39,15 @@ func resurrect() -> Node2D:
 		show_revive_feedback("CAP FULL", Color(1.0, 0.45, 0.1, 1.0))
 		return null
 
+	if GameManager.player_stats == null or not GameManager.player_stats.spend_black_mana(corpse_level):
+		print("Cannot resurrect: not enough Black Mana")
+		show_revive_feedback("NO MANA", Color(0.25, 0.55, 1.0, 1.0))
+		return null
+
 	is_consumed = true
 	print("Resurrecting corpse at %s" % global_position)
 	show_revive_feedback("+SKELETON", Color(0.55, 1.0, 0.75, 1.0))
-	var skeleton := GameManager.spawn_skeleton(global_position + skeleton_spawn_offset)
+	var skeleton := GameManager.spawn_skeleton(global_position + skeleton_spawn_offset, corpse_level)
 	resurrected.emit(self, skeleton)
 	queue_free()
 	return skeleton

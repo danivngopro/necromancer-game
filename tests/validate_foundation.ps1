@@ -19,7 +19,8 @@ $requiredFiles = @(
     "scripts/world/main.gd",
     "scripts/ui/army_debug_ui.gd",
     "scripts/player/player_stats.gd",
-    "scripts/ui/rpg_debug_ui.gd"
+    "scripts/ui/rpg_debug_ui.gd",
+    "scripts/ui/minimap.gd"
 )
 
 $missing = @()
@@ -64,7 +65,9 @@ $scriptExpectations = @{
         "ATTACK",
         "RETURN",
         "DEAD",
-        "GameManager.get_nearest_hostile_target",
+        "force_aggro",
+        "enemy_level",
+        "configure_level",
         "spawn_position",
         "leash_distance",
         "_return_to_spawn",
@@ -76,17 +79,25 @@ $scriptExpectations = @{
         "CHASE",
         "ATTACK",
         "DEAD",
-        "GameManager.get_nearest_enemy"
+        "GameManager.commanded_attack_target",
+        "_get_nearest_active_enemy"
     )
     "scripts/managers/game_manager.gd" = @(
         "signal skeleton_registered",
+        "attack_commanded",
+        "skeleton_command_mode",
+        "set_skeleton_command_mode",
+        "commanded_attack_target",
+        "command_attack_target",
+        "save_game",
+        "load_game",
         "func get_nearest_hostile_target",
         "func get_health_component",
         "skeleton_cap",
         "essence",
         "enemy_killed",
         "can_spawn_skeleton",
-        "record_enemy_kill"
+        "record_enemy_kill",
         "player_stats",
         "register_player_stats"
     )
@@ -114,12 +125,17 @@ $scriptExpectations = @{
         "class_name RangeGizmo",
         "detection_range",
         "attack_range",
+        "enabled: bool = false",
         "draw_arc"
     )
     "scripts/world/main.gd" = @(
+        "map_min",
+        "map_max",
+        "_clamp_player_to_map",
         "enemy_spawn_points",
+        "enemy_spawn_levels",
         "spawn_world_enemies",
-        "starting_skeleton_count",
+        "starting_skeleton_count: int = 0",
         "spawn_starting_skeletons",
         "basic_enemy_scene"
     )
@@ -133,20 +149,37 @@ $scriptExpectations = @{
         "level",
         "experience",
         "stat_points",
-        "vitality",
-        "wisdom",
-        "command",
-        "agility",
-        "dark_arts",
+        "hp",
+        "black_mana",
+        "current_black_mana",
+        "spend_black_mana",
+        "restore_black_mana",
+        "army_size",
+        "movement_speed",
+        "get_skeleton_health_bonus",
+        "get_skeleton_damage_bonus",
+        "increase_stat",
         "add_experience"
     )
     "scripts/ui/rpg_debug_ui.gd" = @(
         "class_name RPGDebugUI",
+        "toggle_expanded",
+        "get_tree().paused",
+        "Button.new",
         "Level:",
         "EXP:",
         "Stat Points:",
-        "Vitality",
-        "Command"
+        "HP",
+        "Black Mana",
+        "Army Size",
+        "Movement Speed"
+    )
+    "scripts/ui/minimap.gd" = @(
+        "class_name Minimap",
+        "map_min",
+        "map_max",
+        "draw_circle",
+        "GameManager.enemies"
     )
 }
 
@@ -163,26 +196,27 @@ foreach ($path in $scriptExpectations.Keys) {
 $sceneExpectations = @{
     "scenes/world/main.tscn" = @(
         "scripts/world/main.gd",
-        "RPGDebugUI"
+        "RPGDebugUI",
+        "Minimap",
+        "WorldBorder",
+        "SafeArea",
+        "Path"
     )
     "scenes/player/player.tscn" = @(
         "PlayerStats",
         "UnitFeedback",
         "HealthBar",
-        "HpLabel",
-        "RangeGizmo"
+        "HpLabel"
     )
     "scenes/enemies/basic_enemy.tscn" = @(
         "UnitFeedback",
         "HealthBar",
-        "HpLabel",
-        "RangeGizmo"
+        "HpLabel"
     )
     "scenes/skeletons/skeleton.tscn" = @(
         "UnitFeedback",
         "HealthBar",
-        "HpLabel",
-        "RangeGizmo"
+        "HpLabel"
     )
     "scenes/world/corpse.tscn" = @(
         "Highlight",

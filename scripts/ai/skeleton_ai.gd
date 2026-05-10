@@ -97,10 +97,12 @@ func _attack_target() -> void:
 		target_enemy = null
 		return
 
+	print("%s attacks %s for %d" % [name, target_enemy.name, attack_damage])
 	enemy_health.apply_damage(attack_damage, self)
 	_attack_timer = attack_cooldown
 
 
 func _on_died(_source: Node) -> void:
 	state = State.DEAD
+	print("%s died" % name)
 	queue_free()

@@ -13,7 +13,11 @@ $requiredFiles = @(
     "scripts/combat/health_component.gd",
     "scripts/summoning/corpse.gd",
     "scripts/summoning/resurrection_controller.gd",
-    "scripts/managers/game_manager.gd"
+    "scripts/managers/game_manager.gd",
+    "scripts/visuals/unit_feedback.gd",
+    "scripts/visuals/range_gizmo.gd",
+    "scripts/world/main.gd",
+    "scripts/ui/army_debug_ui.gd"
 )
 
 $missing = @()
@@ -70,12 +74,50 @@ $scriptExpectations = @{
     "scripts/managers/game_manager.gd" = @(
         "signal skeleton_registered",
         "func get_nearest_hostile_target",
-        "func get_health_component"
+        "func get_health_component",
+        "skeleton_cap",
+        "essence",
+        "enemy_killed",
+        "can_spawn_skeleton",
+        "record_enemy_kill"
     )
     "scripts/summoning/corpse.gd" = @(
         "expired",
         "lifetime_seconds",
-        "func _expire"
+        "func _expire",
+        "set_highlighted",
+        "show_revive_feedback",
+        "RevivePopup"
+    )
+    "scripts/summoning/resurrection_controller.gd" = @(
+        "GameManager.can_spawn_skeleton",
+        "_refresh_corpse_highlights",
+        "skeleton_cap_reached"
+    )
+    "scripts/visuals/unit_feedback.gd" = @(
+        "class_name UnitFeedback",
+        "HealthBar",
+        "DamagePopup",
+        "hit_flash",
+        "knockback"
+    )
+    "scripts/visuals/range_gizmo.gd" = @(
+        "class_name RangeGizmo",
+        "detection_range",
+        "attack_range",
+        "draw_arc"
+    )
+    "scripts/world/main.gd" = @(
+        "startup_enemy_count",
+        "starting_skeleton_count",
+        "spawn_starting_skeletons",
+        "spawn_starting_enemies",
+        "basic_enemy_scene"
+    )
+    "scripts/ui/army_debug_ui.gd" = @(
+        "class_name ArmyDebugUI",
+        "Skeletons:",
+        "Essence:"
     )
 }
 
@@ -84,6 +126,45 @@ foreach ($path in $scriptExpectations.Keys) {
     foreach ($snippet in $scriptExpectations[$path]) {
         if (-not $text.Contains($snippet)) {
             Write-Host "$path is missing expected combat-loop snippet: $snippet"
+            exit 1
+        }
+    }
+}
+
+$sceneExpectations = @{
+    "scenes/world/main.tscn" = @(
+        "scripts/world/main.gd",
+        "ArmyDebugUI"
+    )
+    "scenes/player/player.tscn" = @(
+        "UnitFeedback",
+        "HealthBar",
+        "HpLabel",
+        "RangeGizmo"
+    )
+    "scenes/enemies/basic_enemy.tscn" = @(
+        "UnitFeedback",
+        "HealthBar",
+        "HpLabel",
+        "RangeGizmo"
+    )
+    "scenes/skeletons/skeleton.tscn" = @(
+        "UnitFeedback",
+        "HealthBar",
+        "HpLabel",
+        "RangeGizmo"
+    )
+    "scenes/world/corpse.tscn" = @(
+        "Highlight",
+        "RevivePopupAnchor"
+    )
+}
+
+foreach ($path in $sceneExpectations.Keys) {
+    $text = Get-Content -Raw -LiteralPath $path
+    foreach ($snippet in $sceneExpectations[$path]) {
+        if (-not $text.Contains($snippet)) {
+            Write-Host "$path is missing expected visibility snippet: $snippet"
             exit 1
         }
     }

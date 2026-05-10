@@ -1,9 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://main_game_scene"]
+[gd_scene load_steps=5 format=3 uid="uid://main_game_scene"]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/basic_enemy.tscn" id="2_enemy"]
+[ext_resource type="Script" path="res://scripts/world/main.gd" id="3_main"]
+[ext_resource type="Script" path="res://scripts/ui/army_debug_ui.gd" id="4_army_ui"]
 
 [node name="Main" type="Node2D"]
+script = ExtResource("3_main")
+basic_enemy_scene = ExtResource("2_enemy")
 
 [node name="Ground" type="ColorRect" parent="."]
 offset_left = -2048.0
@@ -18,11 +22,12 @@ position = Vector2(0, 0)
 
 [node name="Enemies" type="Node2D" parent="."]
 
-[node name="BasicEnemy" parent="Enemies" instance=ExtResource("2_enemy")]
-position = Vector2(190, 0)
+[node name="UI" type="CanvasLayer" parent="."]
 
-[node name="BasicEnemy2" parent="Enemies" instance=ExtResource("2_enemy")]
-position = Vector2(-160, 120)
-
-[node name="BasicEnemy3" parent="Enemies" instance=ExtResource("2_enemy")]
-position = Vector2(90, -170)
+[node name="ArmyDebugUI" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 14.0
+offset_right = 196.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 16
+script = ExtResource("4_army_ui")

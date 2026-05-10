@@ -1,8 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://player_necromancer"]
+[gd_scene load_steps=8 format=3 uid="uid://player_necromancer"]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://scripts/summoning/resurrection_controller.gd" id="3_resurrection"]
+[ext_resource type="Script" path="res://scripts/visuals/unit_feedback.gd" id="4_feedback"]
+[ext_resource type="Script" path="res://scripts/visuals/range_gizmo.gd" id="5_range"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 10.0
@@ -25,6 +27,27 @@ shape = SubResource("CircleShape2D_body")
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("2_health")
 max_health = 18
+
+[node name="UnitFeedback" type="Node2D" parent="."]
+script = ExtResource("4_feedback")
+
+[node name="HealthBar" type="ProgressBar" parent="UnitFeedback"]
+offset_left = -18.0
+offset_top = -31.0
+offset_right = 18.0
+offset_bottom = -25.0
+show_percentage = false
+
+[node name="HpLabel" type="Label" parent="UnitFeedback"]
+offset_left = -19.0
+offset_top = -44.0
+offset_right = 28.0
+offset_bottom = -24.0
+theme_override_font_sizes/font_size = 8
+
+[node name="RangeGizmo" type="Node2D" parent="."]
+script = ExtResource("5_range")
+attack_range = 44.0
 
 [node name="ResurrectionController" type="Area2D" parent="."]
 collision_layer = 0

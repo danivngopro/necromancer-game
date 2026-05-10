@@ -14,5 +14,15 @@ script = ExtResource("1_corpse")
 color = Color(0.22, 0.18, 0.15, 1)
 polygon = PackedVector2Array(-12, -5, 8, -8, 13, 2, -8, 7)
 
+[node name="Highlight" type="Polygon2D" parent="."]
+visible = false
+z_index = -1
+color = Color(0.45, 1, 0.25, 0.32)
+polygon = PackedVector2Array(0, -17, 12, -12, 17, 0, 12, 12, 0, 17, -12, 12, -17, 0, -12, -12)
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
+
+[node name="RevivePopupAnchor" type="Node2D" parent="."]
+
+[node name="ReviveSoundPlaceholder" type="AudioStreamPlayer2D" parent="."]

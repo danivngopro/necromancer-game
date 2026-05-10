@@ -3,11 +3,11 @@ extends CharacterBody2D
 
 enum State { IDLE, CHASE, ATTACK, DEAD }
 
-@export var move_speed: float = 95.0
+@export var move_speed: float = 78.0
 @export var contact_damage: int = 1
-@export var detection_range: float = 260.0
+@export var detection_range: float = 230.0
 @export var attack_range: float = 28.0
-@export var attack_cooldown: float = 0.65
+@export var attack_cooldown: float = 0.85
 
 @onready var health: HealthComponent = $HealthComponent
 
@@ -86,11 +86,14 @@ func _attack_target() -> void:
 		target = null
 		return
 
+	print("%s attacks %s for %d" % [name, target.name, contact_damage])
 	target_health.apply_damage(contact_damage, self)
 	_attack_timer = attack_cooldown
 
 
 func _on_died(_source: Node) -> void:
 	state = State.DEAD
+	print("%s died; spawning corpse" % name)
+	GameManager.record_enemy_kill(self, _source)
 	GameManager.spawn_corpse(global_position)
 	queue_free()

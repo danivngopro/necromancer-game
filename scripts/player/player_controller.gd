@@ -42,14 +42,16 @@ func _attack_nearest_enemy() -> void:
 	if enemy == null:
 		return
 
-	var enemy_health := enemy.get_node_or_null("HealthComponent") as HealthComponent
+	var enemy_health := GameManager.get_health_component(enemy)
 	if enemy_health == null:
 		return
 
+	print("%s attacks %s for %d" % [name, enemy.name, attack_damage])
 	enemy_health.apply_damage(attack_damage, self)
 	_attack_timer = attack_cooldown
 
 
 func _on_died(_source: Node) -> void:
+	print("%s died" % name)
 	set_physics_process(false)
 	set_process_unhandled_input(false)

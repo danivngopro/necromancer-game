@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://basic_jungle_enemy"]
+[gd_scene load_steps=7 format=3 uid="uid://basic_jungle_enemy"]
 
 [ext_resource type="Script" path="res://scripts/ai/enemy_ai.gd" id="1_enemy"]
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/visuals/unit_feedback.gd" id="3_feedback"]
+[ext_resource type="Script" path="res://scripts/visuals/range_gizmo.gd" id="4_range"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 9.0
@@ -21,3 +23,25 @@ shape = SubResource("CircleShape2D_body")
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("2_health")
 max_health = 8
+
+[node name="UnitFeedback" type="Node2D" parent="."]
+script = ExtResource("3_feedback")
+
+[node name="HealthBar" type="ProgressBar" parent="UnitFeedback"]
+offset_left = -18.0
+offset_top = -28.0
+offset_right = 18.0
+offset_bottom = -22.0
+show_percentage = false
+
+[node name="HpLabel" type="Label" parent="UnitFeedback"]
+offset_left = -16.0
+offset_top = -41.0
+offset_right = 28.0
+offset_bottom = -21.0
+theme_override_font_sizes/font_size = 8
+
+[node name="RangeGizmo" type="Node2D" parent="."]
+script = ExtResource("4_range")
+detection_range = 230.0
+attack_range = 28.0

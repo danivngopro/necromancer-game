@@ -8,12 +8,15 @@ extends CharacterBody2D
 
 @onready var health: HealthComponent = $HealthComponent
 @onready var resurrection_controller: ResurrectionController = $ResurrectionController
+@onready var stats: Node = $PlayerStats
 
 var _attack_timer: float = 0.0
 
 func _ready() -> void:
 	GameManager.register_player(self)
 	health.died.connect(_on_died)
+	stats.stats_changed.connect(_apply_stats)
+	_apply_stats()
 
 
 func _physics_process(delta: float) -> void:
@@ -30,7 +33,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_movement() -> void:
 	var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	velocity = input_vector * move_speed
+	velocity = input_vector * stats.get_move_speed()
 	move_and_slide()
 
 
@@ -46,9 +49,17 @@ func _attack_nearest_enemy() -> void:
 	if enemy_health == null:
 		return
 
-	print("%s attacks %s for %d" % [name, enemy.name, attack_damage])
-	enemy_health.apply_damage(attack_damage, self)
+	var damage: int = attack_damage + stats.get_skeleton_damage_bonus()
+	print("%s attacks %s for %d" % [name, enemy.name, damage])
+	enemy_health.apply_damage(damage, self)
 	_attack_timer = attack_cooldown
+
+
+func _apply_stats() -> void:
+	move_speed = stats.get_move_speed()
+	health.max_health = stats.get_max_health()
+	health.current_health = mini(health.current_health, health.max_health)
+	health.health_changed.emit(health.current_health, health.max_health)
 
 
 func _on_died(_source: Node) -> void:

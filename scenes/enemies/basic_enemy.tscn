@@ -43,5 +43,5 @@ theme_override_font_sizes/font_size = 8
 
 [node name="RangeGizmo" type="Node2D" parent="."]
 script = ExtResource("4_range")
-detection_range = 230.0
+detection_range = 130.0
 attack_range = 28.0

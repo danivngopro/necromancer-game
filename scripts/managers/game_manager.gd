@@ -1,6 +1,7 @@
 extends Node
 
 signal player_registered(player: Node2D)
+signal player_stats_registered(stats: Node)
 signal enemy_registered(enemy: Node2D)
 signal enemy_unregistered(enemy: Node2D)
 signal corpse_registered(corpse: Node2D)
@@ -17,6 +18,7 @@ const SKELETON_SCENE: PackedScene = preload("res://scenes/skeletons/skeleton.tsc
 const CORPSE_SCENE: PackedScene = preload("res://scenes/world/corpse.tscn")
 
 var player: Node2D
+var player_stats: Node
 var enemies: Array[Node2D] = []
 var corpses: Array[Node2D] = []
 var skeletons: Array[Node2D] = []
@@ -30,6 +32,22 @@ var kills_since_reward: int = 0
 func register_player(new_player: Node2D) -> void:
 	player = new_player
 	player_registered.emit(player)
+
+
+func register_player_stats(stats: Node) -> void:
+	player_stats = stats
+	skeleton_cap = stats.get_skeleton_cap()
+	stats.stats_changed.connect(_sync_from_player_stats)
+	player_stats_registered.emit(stats)
+	skeleton_cap_changed.emit(get_skeleton_count(), skeleton_cap)
+
+
+func _sync_from_player_stats() -> void:
+	if player_stats == null:
+		return
+
+	skeleton_cap = player_stats.get_skeleton_cap()
+	skeleton_cap_changed.emit(get_skeleton_count(), skeleton_cap)
 
 
 func register_enemy(enemy: Node2D) -> void:
@@ -85,6 +103,8 @@ func spawn_skeleton(spawn_position: Vector2) -> Node2D:
 	var skeleton := SKELETON_SCENE.instantiate() as Node2D
 	skeleton.global_position = spawn_position
 	get_tree().current_scene.add_child(skeleton)
+	if player_stats != null and "attack_damage" in skeleton:
+		skeleton.attack_damage += player_stats.get_skeleton_damage_bonus()
 	register_skeleton(skeleton)
 	skeleton_spawned.emit(skeleton)
 	print("Resurrected skeleton at %s" % skeleton.global_position)
@@ -100,11 +120,13 @@ func spawn_corpse(spawn_position: Vector2) -> Node2D:
 	return corpse
 
 
-func record_enemy_kill(enemy: Node2D, source: Node) -> void:
+func record_enemy_kill(enemy: Node2D, source: Node, experience_reward: int = 1) -> void:
 	essence += essence_per_kill
 	kills_since_reward += 1
 	enemy_killed.emit(enemy, source)
 	essence_changed.emit(essence)
+	if player_stats != null:
+		player_stats.add_experience(experience_reward)
 	print("Enemy killed. Essence: %d. Reward progress: %d/%d" % [essence, kills_since_reward, kills_per_reward])
 
 	if kills_since_reward >= kills_per_reward:
@@ -113,9 +135,10 @@ func record_enemy_kill(enemy: Node2D, source: Node) -> void:
 
 
 func _apply_progression_reward() -> void:
-	skeleton_cap += 1
-	skeleton_cap_changed.emit(get_skeleton_count(), skeleton_cap)
-	var message := "Skeleton cap increased to %d" % skeleton_cap
+	var player_health := get_health_component(player)
+	if player_health != null:
+		player_health.heal(3)
+	var message := "Dark vitality restored"
 	print(message)
 	progression_reward_applied.emit(message)
 

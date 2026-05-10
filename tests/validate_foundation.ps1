@@ -17,7 +17,9 @@ $requiredFiles = @(
     "scripts/visuals/unit_feedback.gd",
     "scripts/visuals/range_gizmo.gd",
     "scripts/world/main.gd",
-    "scripts/ui/army_debug_ui.gd"
+    "scripts/ui/army_debug_ui.gd",
+    "scripts/player/player_stats.gd",
+    "scripts/ui/rpg_debug_ui.gd"
 )
 
 $missing = @()
@@ -60,8 +62,13 @@ $scriptExpectations = @{
         "IDLE",
         "CHASE",
         "ATTACK",
+        "RETURN",
         "DEAD",
-        "GameManager.get_nearest_hostile_target"
+        "GameManager.get_nearest_hostile_target",
+        "spawn_position",
+        "leash_distance",
+        "_return_to_spawn",
+        "_restore_after_leash"
     )
     "scripts/ai/skeleton_ai.gd" = @(
         "enum State",
@@ -80,6 +87,8 @@ $scriptExpectations = @{
         "enemy_killed",
         "can_spawn_skeleton",
         "record_enemy_kill"
+        "player_stats",
+        "register_player_stats"
     )
     "scripts/summoning/corpse.gd" = @(
         "expired",
@@ -108,16 +117,36 @@ $scriptExpectations = @{
         "draw_arc"
     )
     "scripts/world/main.gd" = @(
-        "startup_enemy_count",
+        "enemy_spawn_points",
+        "spawn_world_enemies",
         "starting_skeleton_count",
         "spawn_starting_skeletons",
-        "spawn_starting_enemies",
         "basic_enemy_scene"
     )
     "scripts/ui/army_debug_ui.gd" = @(
         "class_name ArmyDebugUI",
         "Skeletons:",
         "Essence:"
+    )
+    "scripts/player/player_stats.gd" = @(
+        "class_name PlayerStats",
+        "level",
+        "experience",
+        "stat_points",
+        "vitality",
+        "wisdom",
+        "command",
+        "agility",
+        "dark_arts",
+        "add_experience"
+    )
+    "scripts/ui/rpg_debug_ui.gd" = @(
+        "class_name RPGDebugUI",
+        "Level:",
+        "EXP:",
+        "Stat Points:",
+        "Vitality",
+        "Command"
     )
 }
 
@@ -134,9 +163,10 @@ foreach ($path in $scriptExpectations.Keys) {
 $sceneExpectations = @{
     "scenes/world/main.tscn" = @(
         "scripts/world/main.gd",
-        "ArmyDebugUI"
+        "RPGDebugUI"
     )
     "scenes/player/player.tscn" = @(
+        "PlayerStats",
         "UnitFeedback",
         "HealthBar",
         "HpLabel",
@@ -156,6 +186,7 @@ $sceneExpectations = @{
     )
     "scenes/world/corpse.tscn" = @(
         "Highlight",
+        "ReviveEffectAnchor",
         "RevivePopupAnchor"
     )
 }

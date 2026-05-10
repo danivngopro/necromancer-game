@@ -1,8 +1,14 @@
 extends Node2D
 
 @export var basic_enemy_scene: PackedScene
-@export var startup_enemy_count: int = 4
-@export var startup_spawn_radius: float = 280.0
+@export var enemy_spawn_points: Array[Vector2] = [
+	Vector2(320, -90),
+	Vector2(460, 120),
+	Vector2(-380, 80),
+	Vector2(-520, -140),
+	Vector2(120, 420),
+	Vector2(-160, 560)
+]
 @export var starting_skeleton_count: int = 2
 @export var starting_skeleton_radius: float = 46.0
 
@@ -11,7 +17,7 @@ extends Node2D
 
 func _ready() -> void:
 	spawn_starting_skeletons()
-	spawn_starting_enemies()
+	spawn_world_enemies()
 
 
 func spawn_starting_skeletons() -> void:
@@ -24,14 +30,12 @@ func spawn_starting_skeletons() -> void:
 		GameManager.spawn_skeleton(player.global_position + offset)
 
 
-func spawn_starting_enemies() -> void:
-	if player == null or enemies_root == null or basic_enemy_scene == null:
+func spawn_world_enemies() -> void:
+	if enemies_root == null or basic_enemy_scene == null:
 		return
 
-	for index in startup_enemy_count:
+	for spawn_point in enemy_spawn_points:
 		var enemy := basic_enemy_scene.instantiate() as Node2D
-		var angle := TAU * float(index) / float(startup_enemy_count)
-		var stagger := Vector2(cos(angle), sin(angle)) * startup_spawn_radius
-		enemy.global_position = player.global_position + stagger
+		enemy.global_position = spawn_point
 		enemies_root.add_child(enemy)
-		print("Spawned startup enemy %s at %s" % [enemy.name, enemy.global_position])
+		print("Spawned world enemy %s at %s" % [enemy.name, enemy.global_position])

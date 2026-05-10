@@ -1,10 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://player_necromancer"]
+[gd_scene load_steps=9 format=3 uid="uid://player_necromancer"]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://scripts/summoning/resurrection_controller.gd" id="3_resurrection"]
 [ext_resource type="Script" path="res://scripts/visuals/unit_feedback.gd" id="4_feedback"]
 [ext_resource type="Script" path="res://scripts/visuals/range_gizmo.gd" id="5_range"]
+[ext_resource type="Script" path="res://scripts/player/player_stats.gd" id="6_stats"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 10.0
@@ -27,6 +28,9 @@ shape = SubResource("CircleShape2D_body")
 [node name="HealthComponent" type="Node" parent="."]
 script = ExtResource("2_health")
 max_health = 18
+
+[node name="PlayerStats" type="Node" parent="."]
+script = ExtResource("6_stats")
 
 [node name="UnitFeedback" type="Node2D" parent="."]
 script = ExtResource("4_feedback")

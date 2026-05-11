@@ -105,13 +105,14 @@ func _cast_ranged_attack(click_position: Vector2) -> void:
 
 	var damage: int = attack_damage + stats.get_skeleton_damage_bonus()
 	print("%s casts at %s for %d" % [name, enemy.name, damage])
+	_cast_timer = cast_cooldown
+	enemy_health.apply_damage(damage, self)
 	var feedback: Node = _get_interaction_feedback()
 	if feedback != null:
 		feedback.show_cast_marker(global_position, enemy)
 	var projectile: Node = CombatProjectileScript.new()
 	get_tree().current_scene.add_child(projectile)
-	projectile.launch(global_position, enemy, damage, self, Color(0.6, 0.35, 1.0, 1.0))
-	_cast_timer = cast_cooldown
+	projectile.launch(global_position, enemy, 0, self, Color(0.6, 0.35, 1.0, 1.0))
 
 
 func _get_interaction_feedback() -> Node:

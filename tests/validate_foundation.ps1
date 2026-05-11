@@ -92,7 +92,9 @@ $scriptExpectations = @{
         "_command_skeleton_attack",
         "_cast_ranged_attack",
         "cast_cooldown: float = 2.0",
-        "cast_range"
+        "cast_range",
+        "_cast_timer = cast_cooldown",
+        "enemy_health.apply_damage(damage, self)"
     )
     "scripts/managers/game_manager.gd" = @(
         "signal skeleton_registered",

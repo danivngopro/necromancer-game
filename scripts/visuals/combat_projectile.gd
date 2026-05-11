@@ -42,7 +42,7 @@ func _draw() -> void:
 func _apply_impact() -> void:
 	if target != null and is_instance_valid(target):
 		var health := GameManager.get_health_component(target)
-		if health != null:
+		if health != null and damage > 0:
 			health.apply_damage(damage, source)
 		impact.emit(target)
 	queue_free()

@@ -102,6 +102,10 @@ func _run() -> void:
 	player_stats.stat_points = 1
 	_assert(player_stats.increase_stat("black_mana"), "Black mana stat should be allocatable")
 	_assert(player_stats.black_mana == mana_before + 1, "Black mana stat should add one max mana")
+	mana_before = player_stats.black_mana
+	player_stats.stat_points = 1
+	_assert(player_stats.increase_stat("mana_regen"), "Mana regen stat should be allocatable")
+	_assert(player_stats.black_mana == mana_before + 1, "Mana regen stat should add one max mana")
 
 	print("Combat regression runner passed")
 	get_tree().quit(0)

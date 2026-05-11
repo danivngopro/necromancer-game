@@ -112,6 +112,9 @@ func increase_stat(stat_name: String) -> bool:
 			movement_speed += 10
 		"mana_regen":
 			mana_regen += 1
+			black_mana += 1
+			current_black_mana = minf(current_black_mana + 1.0, float(black_mana))
+			black_mana_changed.emit(current_black_mana, black_mana)
 		_:
 			return false
 

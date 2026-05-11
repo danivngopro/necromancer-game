@@ -40,9 +40,9 @@ func _ready() -> void:
 
 	set_process(_sprite_body != null)
 
-	_apply_label_quality(hp_label, 10)
-	_apply_label_quality(mana_label, 10)
-	_apply_label_quality(name_label, 10)
+	_apply_label_quality(hp_label, 18)
+	_apply_label_quality(mana_label, 18)
+	_apply_label_quality(name_label, 18)
 
 	if health == null:
 		return
@@ -62,7 +62,7 @@ func set_name_text(label_text: String) -> void:
 		name_label = get_node_or_null(name_label_path) as Label
 	if name_label != null:
 		name_label.text = label_text
-		_apply_label_quality(name_label, 10)
+		_apply_label_quality(name_label, 18)
 
 
 func play_attack_animation() -> void:
@@ -209,6 +209,8 @@ func _apply_label_quality(label: Label, font_size: int) -> void:
 	label.add_theme_font_override("font", _make_ui_font())
 	label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
 	label.add_theme_constant_override("outline_size", 2)
+	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	label.scale = Vector2(0.58, 0.58)
 
 
 func _make_ui_font() -> SystemFont:

@@ -33,6 +33,9 @@ $requiredFiles = @(
     "assets/sprites/player_placeholder.svg",
     "assets/sprites/enemy_placeholder.svg",
     "assets/sprites/skeleton_placeholder.svg",
+    "assets/sprites/player_sheet.png",
+    "assets/sprites/enemy_sheet.png",
+    "assets/sprites/skeleton_sheet.png",
     "assets/sprites/corpse_placeholder.svg",
     "tests/combat_regression_runner.gd",
     "tests/combat_regression_runner.tscn"
@@ -231,6 +234,7 @@ $scriptExpectations = @{
         "spend_black_mana",
         "restore_black_mana",
         "Mana regen: +%.2f/sec",
+        "black_mana += 1",
         "army_size",
         "movement_speed",
         "movement_speed: int = 80",
@@ -321,6 +325,7 @@ $scriptExpectations = @{
         "Revived skeleton HP should inherit 12 percent",
         "Revived skeleton speed should inherit 80 percent",
         "Projectile with freed source should still apply damage safely",
+        "Mana regen stat should add one max mana",
         "Player cast cooldown should be 3 seconds",
         "Player auto attack should deal 1 damage",
         "Player base speed should be 30 percent slower",
@@ -360,7 +365,7 @@ $sceneExpectations = @{
     )
     "scenes/player/player.tscn" = @(
         "PlayerStats",
-        "player_placeholder.svg",
+        "player_sheet.png",
         "Sprite2D",
         "UnitFeedback",
         "HealthBar",
@@ -371,7 +376,7 @@ $sceneExpectations = @{
     )
     "scenes/enemies/basic_enemy.tscn" = @(
         "UnitFeedback",
-        "enemy_placeholder.svg",
+        "enemy_sheet.png",
         "Sprite2D",
         "NameLabel",
         "HealthBar",
@@ -381,7 +386,7 @@ $sceneExpectations = @{
     )
     "scenes/skeletons/skeleton.tscn" = @(
         "UnitFeedback",
-        "skeleton_placeholder.svg",
+        "skeleton_sheet.png",
         "Sprite2D",
         "HealthBar",
         "HpLabel"

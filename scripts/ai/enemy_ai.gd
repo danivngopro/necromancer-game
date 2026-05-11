@@ -21,6 +21,7 @@ var target: Node2D
 var spawn_position: Vector2
 var is_aggroed: bool = false
 var _attack_timer: float = 0.0
+var _telegraphing_attack: bool = false
 
 func _ready() -> void:
 	spawn_position = global_position
@@ -105,7 +106,7 @@ func _attack_target() -> void:
 	velocity = Vector2.ZERO
 	move_and_slide()
 
-	if _attack_timer > 0.0:
+	if _attack_timer > 0.0 or _telegraphing_attack:
 		return
 
 	var target_health := GameManager.get_health_component(target)
@@ -114,8 +115,40 @@ func _attack_target() -> void:
 		return
 
 	print("%s attacks %s for %d" % [name, target.name, contact_damage])
-	target_health.apply_damage(contact_damage, self)
 	_attack_timer = attack_cooldown
+	_telegraph_attack(target)
+
+
+func _telegraph_attack(attack_target: Node2D) -> void:
+	_telegraphing_attack = true
+	_show_attack_telegraph(attack_target.global_position)
+	await get_tree().create_timer(0.18).timeout
+	_telegraphing_attack = false
+	if state == State.DEAD or attack_target == null or not is_instance_valid(attack_target):
+		return
+
+	var target_health := GameManager.get_health_component(attack_target)
+	if target_health != null and not target_health.is_dead and global_position.distance_to(attack_target.global_position) <= attack_range + 6.0:
+		target_health.apply_damage(contact_damage, self)
+
+
+func _show_attack_telegraph(world_position: Vector2) -> void:
+	var warning := Line2D.new()
+	warning.name = "EnemyAttackTelegraph"
+	warning.z_index = 63
+	warning.width = 2.0
+	warning.default_color = Color(1.0, 0.08, 0.03, 0.72)
+	warning.closed = true
+	var points := PackedVector2Array()
+	for index in 36:
+		var angle := TAU * float(index) / 36.0
+		points.append(Vector2(cos(angle), sin(angle)) * attack_range)
+	warning.points = points
+	get_tree().current_scene.add_child(warning)
+	warning.global_position = world_position
+	var tween := warning.create_tween()
+	tween.tween_property(warning, "modulate:a", 0.0, 0.22)
+	tween.tween_callback(warning.queue_free)
 
 
 func _disengage() -> void:

@@ -115,6 +115,35 @@ func get_skeleton_count() -> int:
 	return skeletons.size()
 
 
+func get_skeleton_formation_position(skeleton: Node2D, base_distance: float) -> Vector2:
+	if player == null or not is_instance_valid(player):
+		return skeleton.global_position
+
+	_prune_invalid_units(skeletons)
+	var index := skeletons.find(skeleton)
+	if index < 0:
+		return player.global_position
+
+	var count := maxi(skeletons.size(), 1)
+	var angle := TAU * float(index) / float(count)
+	var ring := base_distance + (float(index / 8) * 18.0)
+	return player.global_position + (Vector2(cos(angle), sin(angle)) * ring)
+
+
+func get_skeleton_attack_position(skeleton: Node2D, target: Node2D, radius: float) -> Vector2:
+	if target == null or not is_instance_valid(target):
+		return skeleton.global_position
+
+	_prune_invalid_units(skeletons)
+	var index := skeletons.find(skeleton)
+	if index < 0:
+		return target.global_position
+
+	var count := maxi(skeletons.size(), 1)
+	var angle := TAU * float(index) / float(count)
+	return target.global_position + (Vector2(cos(angle), sin(angle)) * radius)
+
+
 func can_spawn_skeleton() -> bool:
 	return get_skeleton_count() < skeleton_cap
 

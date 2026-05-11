@@ -51,7 +51,7 @@ theme_override_font_sizes/font_size = 8
 
 [node name="RangeGizmo" type="Node2D" parent="."]
 script = ExtResource("5_range")
-attack_range = 44.0
+attack_range = 260.0
 
 [node name="ResurrectionController" type="Area2D" parent="."]
 collision_layer = 0

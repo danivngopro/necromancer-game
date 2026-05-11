@@ -1,12 +1,15 @@
 class_name SkeletonAI
 extends CharacterBody2D
 
+const CombatProjectileScript: Script = preload("res://scripts/visuals/combat_projectile.gd")
+
 enum State { IDLE, CHASE, ATTACK, DEAD }
 
 @export var move_speed: float = 135.0
 @export var follow_distance: float = 54.0
 @export var acquire_range: float = 180.0
 @export var attack_range: float = 30.0
+@export var attack_slot_radius: float = 34.0
 @export var attack_damage: int = 1
 @export var attack_cooldown: float = 1.15
 
@@ -79,7 +82,8 @@ func _update_state() -> void:
 
 
 func _chase_target() -> void:
-	var to_target := target_enemy.global_position - global_position
+	var attack_position := GameManager.get_skeleton_attack_position(self, target_enemy, attack_slot_radius)
+	var to_target := attack_position - global_position
 	velocity = to_target.normalized() * move_speed
 	move_and_slide()
 
@@ -95,9 +99,10 @@ func _follow_player() -> void:
 		move_and_slide()
 		return
 
-	var to_player := player.global_position - global_position
-	if to_player.length() > follow_distance:
-		velocity = to_player.normalized() * move_speed
+	var formation_position := GameManager.get_skeleton_formation_position(self, follow_distance)
+	var to_formation := formation_position - global_position
+	if to_formation.length() > 8.0:
+		velocity = to_formation.normalized() * move_speed
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
@@ -125,7 +130,9 @@ func _attack_target() -> void:
 		return
 
 	print("%s attacks %s for %d" % [name, target_enemy.name, attack_damage])
-	enemy_health.apply_damage(attack_damage, self)
+	var projectile: Node = CombatProjectileScript.new()
+	get_tree().current_scene.add_child(projectile)
+	projectile.launch(global_position, target_enemy, attack_damage, self, Color(0.72, 0.95, 0.66, 1.0))
 	_attack_timer = attack_cooldown
 
 

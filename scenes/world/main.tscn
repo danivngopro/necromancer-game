@@ -1,10 +1,21 @@
-[gd_scene load_steps=6 format=3 uid="uid://main_game_scene"]
+[gd_scene load_steps=11 format=3 uid="uid://main_game_scene"]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/basic_enemy.tscn" id="2_enemy"]
 [ext_resource type="Script" path="res://scripts/world/main.gd" id="3_main"]
 [ext_resource type="Script" path="res://scripts/ui/rpg_debug_ui.gd" id="4_rpg_ui"]
 [ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="5_minimap"]
+[ext_resource type="Script" path="res://scripts/ui/command_hud.gd" id="6_command"]
+[ext_resource type="Script" path="res://scripts/visuals/interaction_feedback.gd" id="7_feedback"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle_wide"]
+size = Vector2(170, 34)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle_tall"]
+size = Vector2(42, 150)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle_block"]
+size = Vector2(86, 72)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("3_main")
@@ -41,6 +52,44 @@ offset_right = 520.0
 offset_bottom = 382.0
 mouse_filter = 2
 color = Color(0.12, 0.17, 0.09, 1)
+
+[node name="WorldObstacles" type="Node2D" parent="."]
+
+[node name="NorthRock" type="StaticBody2D" parent="WorldObstacles"]
+position = Vector2(-260, 190)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Visual" type="Polygon2D" parent="WorldObstacles/NorthRock"]
+color = Color(0.075, 0.18, 0.09, 1)
+polygon = PackedVector2Array(-85, -17, 85, -17, 85, 17, -85, 17)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/NorthRock"]
+shape = SubResource("RectangleShape2D_obstacle_wide")
+
+[node name="EastThicket" type="StaticBody2D" parent="WorldObstacles"]
+position = Vector2(520, 230)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Visual" type="Polygon2D" parent="WorldObstacles/EastThicket"]
+color = Color(0.055, 0.22, 0.08, 1)
+polygon = PackedVector2Array(-21, -75, 21, -75, 21, 75, -21, 75)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/EastThicket"]
+shape = SubResource("RectangleShape2D_obstacle_tall")
+
+[node name="SouthRuin" type="StaticBody2D" parent="WorldObstacles"]
+position = Vector2(-450, 660)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Visual" type="Polygon2D" parent="WorldObstacles/SouthRuin"]
+color = Color(0.13, 0.15, 0.12, 1)
+polygon = PackedVector2Array(-43, -36, 43, -36, 43, 36, -43, 36)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/SouthRuin"]
+shape = SubResource("RectangleShape2D_obstacle_block")
 
 [node name="WorldBorder" type="Node2D" parent="."]
 
@@ -81,6 +130,9 @@ position = Vector2(0, 0)
 
 [node name="Enemies" type="Node2D" parent="."]
 
+[node name="InteractionFeedback" type="Node2D" parent="."]
+script = ExtResource("7_feedback")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="RPGDebugUI" type="Label" parent="UI"]
@@ -97,3 +149,11 @@ offset_top = 18.0
 offset_right = 1268.0
 offset_bottom = 166.0
 script = ExtResource("5_minimap")
+
+[node name="CommandHUD" type="HBoxContainer" parent="UI"]
+offset_left = 486.0
+offset_top = 18.0
+offset_right = 794.0
+offset_bottom = 48.0
+theme_override_constants/separation = 8
+script = ExtResource("6_command")

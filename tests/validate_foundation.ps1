@@ -21,6 +21,10 @@ $requiredFiles = @(
     "scripts/player/player_stats.gd",
     "scripts/ui/rpg_debug_ui.gd",
     "scripts/ui/minimap.gd"
+    "scripts/visuals/interaction_feedback.gd",
+    "scripts/visuals/combat_projectile.gd",
+    "scripts/ui/command_hud.gd",
+    "docs/asset-scale-style-guide.md"
 )
 
 $missing = @()
@@ -81,6 +85,14 @@ $scriptExpectations = @{
         "DEAD",
         "GameManager.commanded_attack_target",
         "_get_nearest_active_enemy"
+    )
+    "scripts/player/player_controller.gd" = @(
+        "MOUSE_BUTTON_RIGHT",
+        "MOUSE_BUTTON_LEFT",
+        "_command_skeleton_attack",
+        "_cast_ranged_attack",
+        "cast_cooldown: float = 2.0",
+        "cast_range"
     )
     "scripts/managers/game_manager.gd" = @(
         "signal skeleton_registered",
@@ -181,6 +193,28 @@ $scriptExpectations = @{
         "draw_circle",
         "GameManager.enemies"
     )
+    "scripts/visuals/interaction_feedback.gd" = @(
+        "class_name InteractionFeedback",
+        "show_move_marker",
+        "show_attack_command",
+        "show_cast_marker",
+        "TargetRing",
+        "CommandLine"
+    )
+    "scripts/visuals/combat_projectile.gd" = @(
+        "class_name CombatProjectile",
+        "launch",
+        "impact",
+        "target_position",
+        "travel_speed"
+    )
+    "scripts/ui/command_hud.gd" = @(
+        "class_name CommandHUD",
+        "Follow",
+        "Hold",
+        "Attack",
+        "GameManager.skeleton_command_changed"
+    )
 }
 
 foreach ($path in $scriptExpectations.Keys) {
@@ -198,6 +232,9 @@ $sceneExpectations = @{
         "scripts/world/main.gd",
         "RPGDebugUI",
         "Minimap",
+        "CommandHUD",
+        "InteractionFeedback",
+        "WorldObstacles",
         "WorldBorder",
         "SafeArea",
         "Path"

@@ -1,10 +1,12 @@
 class_name PlayerController
 extends CharacterBody2D
 
+const CombatProjectileScript: Script = preload("res://scripts/visuals/combat_projectile.gd")
+
 @export var move_speed: float = 180.0
 @export var attack_damage: int = 3
-@export var attack_range: float = 44.0
-@export var attack_cooldown: float = 0.35
+@export var cast_range: float = 260.0
+@export var cast_cooldown: float = 2.0
 @export var click_enemy_radius: float = 18.0
 @export var move_arrival_distance: float = 8.0
 
@@ -12,10 +14,9 @@ extends CharacterBody2D
 @onready var resurrection_controller: ResurrectionController = $ResurrectionController
 @onready var stats: Node = $PlayerStats
 
-var _attack_timer: float = 0.0
+var _cast_timer: float = 0.0
 var _move_target: Vector2
 var _has_move_target: bool = false
-var _attack_target: Node2D
 
 func _ready() -> void:
 	GameManager.register_player(self)
@@ -25,13 +26,15 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_attack_timer = maxf(_attack_timer - delta, 0.0)
+	_cast_timer = maxf(_cast_timer - delta, 0.0)
 	_handle_movement()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		_handle_right_click(get_global_mouse_position())
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_cast_ranged_attack(get_global_mouse_position())
 	elif event.is_action_pressed("resurrect"):
 		resurrection_controller.request_resurrection()
 	elif event.is_action_pressed("command_follow"):
@@ -45,14 +48,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_movement() -> void:
-	if _attack_target != null and is_instance_valid(_attack_target):
-		_move_target = _attack_target.global_position
-		if global_position.distance_to(_attack_target.global_position) <= attack_range:
-			velocity = Vector2.ZERO
-			move_and_slide()
-			_attack_commanded_enemy()
-			return
-
 	if not _has_move_target:
 		velocity = Vector2.ZERO
 		move_and_slide()
@@ -70,27 +65,38 @@ func _handle_movement() -> void:
 func _handle_right_click(click_position: Vector2) -> void:
 	var clicked_enemy := GameManager.get_nearest_enemy(click_position, click_enemy_radius)
 	if clicked_enemy != null:
-		_attack_target = clicked_enemy
-		_move_target = clicked_enemy.global_position
-		_has_move_target = true
-		GameManager.set_skeleton_command_mode("attack")
-		GameManager.command_attack_target(clicked_enemy)
-		if clicked_enemy.has_method("force_aggro"):
-			clicked_enemy.force_aggro(self)
+		_command_skeleton_attack(clicked_enemy)
 		return
 
-	_attack_target = null
 	GameManager.clear_attack_command()
 	_move_target = click_position
 	_has_move_target = true
+	var feedback: Node = _get_interaction_feedback()
+	if feedback != null:
+		feedback.show_move_marker(click_position)
 
 
-func _attack_commanded_enemy() -> void:
-	if _attack_timer > 0.0:
+func _command_skeleton_attack(enemy: Node2D) -> void:
+	_has_move_target = false
+	GameManager.set_skeleton_command_mode("attack")
+	GameManager.command_attack_target(enemy)
+	if enemy.has_method("force_aggro"):
+		enemy.force_aggro(self)
+	var feedback: Node = _get_interaction_feedback()
+	if feedback != null:
+		feedback.show_attack_command(global_position, enemy)
+
+
+func _cast_ranged_attack(click_position: Vector2) -> void:
+	if _cast_timer > 0.0:
 		return
 
-	var enemy := _attack_target
+	var enemy := GameManager.get_nearest_enemy(click_position, click_enemy_radius)
 	if enemy == null:
+		return
+
+	if global_position.distance_to(enemy.global_position) > cast_range:
+		print("Target out of range")
 		return
 
 	var enemy_health := GameManager.get_health_component(enemy)
@@ -98,9 +104,21 @@ func _attack_commanded_enemy() -> void:
 		return
 
 	var damage: int = attack_damage + stats.get_skeleton_damage_bonus()
-	print("%s attacks %s for %d" % [name, enemy.name, damage])
-	enemy_health.apply_damage(damage, self)
-	_attack_timer = attack_cooldown
+	print("%s casts at %s for %d" % [name, enemy.name, damage])
+	var feedback: Node = _get_interaction_feedback()
+	if feedback != null:
+		feedback.show_cast_marker(global_position, enemy)
+	var projectile: Node = CombatProjectileScript.new()
+	get_tree().current_scene.add_child(projectile)
+	projectile.launch(global_position, enemy, damage, self, Color(0.6, 0.35, 1.0, 1.0))
+	_cast_timer = cast_cooldown
+
+
+func _get_interaction_feedback() -> Node:
+	if get_tree().current_scene == null:
+		return null
+
+	return get_tree().current_scene.get_node_or_null("InteractionFeedback")
 
 
 func _apply_stats() -> void:

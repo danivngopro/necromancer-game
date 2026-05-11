@@ -4,6 +4,7 @@ extends CharacterBody2D
 enum State { IDLE, CHASE, ATTACK, RETURN, DEAD }
 
 @export var move_speed: float = 78.0
+@export var base_move_speed: float = 78.0
 @export var contact_damage: int = 1
 @export var experience_reward: int = 3
 @export var enemy_level: int = 1
@@ -15,16 +16,19 @@ enum State { IDLE, CHASE, ATTACK, RETURN, DEAD }
 @export var patrol_radius: float = 24.0
 
 @onready var health: HealthComponent = $HealthComponent
+@onready var selection_outline: CanvasItem = get_node_or_null("SelectionOutline") as CanvasItem
+@onready var hover_outline: CanvasItem = get_node_or_null("HoverOutline") as CanvasItem
 
 var state: State = State.IDLE
 var target: Node2D
 var spawn_position: Vector2
 var is_aggroed: bool = false
 var _attack_timer: float = 0.0
-var _telegraphing_attack: bool = false
 
 func _ready() -> void:
 	spawn_position = global_position
+	set_selected(false)
+	set_hovered(false)
 	configure_level(enemy_level)
 	GameManager.register_enemy(self)
 	health.died.connect(_on_died)
@@ -76,6 +80,9 @@ func _update_target() -> void:
 
 
 func _update_state() -> void:
+	if state == State.RETURN:
+		return
+
 	if target == null:
 		state = State.IDLE
 		return
@@ -106,7 +113,7 @@ func _attack_target() -> void:
 	velocity = Vector2.ZERO
 	move_and_slide()
 
-	if _attack_timer > 0.0 or _telegraphing_attack:
+	if _attack_timer > 0.0:
 		return
 
 	var target_health := GameManager.get_health_component(target)
@@ -115,21 +122,12 @@ func _attack_target() -> void:
 		return
 
 	print("%s attacks %s for %d" % [name, target.name, contact_damage])
+	var feedback := get_node_or_null("UnitFeedback") as UnitFeedback
+	if feedback != null:
+		feedback.play_attack_animation()
+	_show_attack_telegraph(target.global_position)
+	target_health.apply_damage(contact_damage, self)
 	_attack_timer = attack_cooldown
-	_telegraph_attack(target)
-
-
-func _telegraph_attack(attack_target: Node2D) -> void:
-	_telegraphing_attack = true
-	_show_attack_telegraph(attack_target.global_position)
-	await get_tree().create_timer(0.18).timeout
-	_telegraphing_attack = false
-	if state == State.DEAD or attack_target == null or not is_instance_valid(attack_target):
-		return
-
-	var target_health := GameManager.get_health_component(attack_target)
-	if target_health != null and not target_health.is_dead and global_position.distance_to(attack_target.global_position) <= attack_range + 6.0:
-		target_health.apply_damage(contact_damage, self)
 
 
 func _show_attack_telegraph(world_position: Vector2) -> void:
@@ -188,16 +186,22 @@ func force_aggro(new_target: Node2D) -> void:
 
 func configure_level(level: int) -> void:
 	enemy_level = maxi(level, 1)
-	contact_damage = enemy_level
-	experience_reward = 2 + enemy_level
+	var level_multiplier := int(pow(2.0, float(enemy_level - 1)))
+	contact_damage = level_multiplier
+	experience_reward = 2 * level_multiplier
+	move_speed = base_move_speed + (float(enemy_level - 1) * 12.0)
 	attack_cooldown = maxf(0.35, 0.95 - (float(enemy_level - 1) * 0.08))
 	if health != null:
-		health.max_health = 6 + (enemy_level * 3)
+		health.max_health = 4 * level_multiplier
 		health.current_health = health.max_health
 
-	var body := get_node_or_null("Body") as Polygon2D
+	var body := get_node_or_null("Body") as CanvasItem
 	if body != null:
-		body.color = _level_color(enemy_level)
+		body.modulate = _level_color(enemy_level)
+
+	var feedback := get_node_or_null("UnitFeedback") as UnitFeedback
+	if feedback != null:
+		feedback.set_name_text("Lv %d %s" % [enemy_level, name])
 
 
 func _level_color(level: int) -> Color:
@@ -219,11 +223,21 @@ func _on_damaged(_amount: int, source: Node) -> void:
 		force_aggro(source as Node2D)
 
 
+func set_selected(is_selected: bool) -> void:
+	if selection_outline != null:
+		selection_outline.visible = is_selected
+
+
+func set_hovered(is_hovered: bool) -> void:
+	if hover_outline != null:
+		hover_outline.visible = is_hovered
+
+
 func _on_died(_source: Node) -> void:
 	state = State.DEAD
 	if GameManager.commanded_attack_target == self:
 		GameManager.clear_attack_command()
 	print("%s died; spawning corpse" % name)
 	GameManager.record_enemy_kill(self, _source, experience_reward)
-	GameManager.spawn_corpse(global_position, enemy_level)
+	GameManager.spawn_corpse(global_position, enemy_level, health.max_health, contact_damage, move_speed)
 	queue_free()

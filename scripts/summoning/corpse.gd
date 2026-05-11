@@ -5,11 +5,15 @@ signal resurrected(corpse: Corpse, skeleton: Node2D)
 signal expired(corpse: Corpse)
 
 @export var skeleton_spawn_offset: Vector2 = Vector2(0, -12)
-@export var lifetime_seconds: float = 12.0
+@export var lifetime_seconds: float = 30.0
 @export var corpse_level: int = 1
+@export var source_max_health: int = 6
+@export var source_damage: int = 1
+@export var source_move_speed: float = 135.0
 
 @onready var body: CanvasItem = $Body
 @onready var highlight: CanvasItem = get_node_or_null("Highlight") as CanvasItem
+@onready var cost_label: Label = get_node_or_null("CostLabel") as Label
 @onready var popup_anchor: Node2D = get_node_or_null("RevivePopupAnchor") as Node2D
 @onready var effect_anchor: Node2D = get_node_or_null("ReviveEffectAnchor") as Node2D
 @onready var revive_sound: AudioStreamPlayer2D = get_node_or_null("ReviveSoundPlaceholder") as AudioStreamPlayer2D
@@ -19,6 +23,7 @@ var _base_body_color: Color = Color.WHITE
 
 func _ready() -> void:
 	_base_body_color = body.modulate
+	_refresh_cost_label()
 	set_highlighted(false)
 	GameManager.register_corpse(self)
 	print("Corpse ready at %s" % global_position)
@@ -47,7 +52,7 @@ func resurrect() -> Node2D:
 	is_consumed = true
 	print("Resurrecting corpse at %s" % global_position)
 	show_revive_feedback("+SKELETON", Color(0.55, 1.0, 0.75, 1.0))
-	var skeleton := GameManager.spawn_skeleton(global_position + skeleton_spawn_offset, corpse_level)
+	var skeleton := GameManager.spawn_skeleton(global_position + skeleton_spawn_offset, corpse_level, source_max_health, source_damage, source_move_speed)
 	resurrected.emit(self, skeleton)
 	queue_free()
 	return skeleton
@@ -59,6 +64,8 @@ func set_highlighted(is_highlighted: bool) -> void:
 
 	if body != null:
 		body.modulate = Color(0.75, 1.0, 0.55, 1.0) if is_highlighted else _base_body_color
+	if cost_label != null:
+		cost_label.visible = is_highlighted
 
 
 func show_revive_feedback(text: String, color: Color = Color(0.55, 1.0, 0.75, 1.0)) -> void:
@@ -76,6 +83,8 @@ func show_revive_feedback(text: String, color: Color = Color(0.55, 1.0, 0.75, 1.
 	popup.text = text
 	popup.z_index = 60
 	popup.add_theme_color_override("font_color", color)
+	popup.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	popup.add_theme_constant_override("outline_size", 2)
 	popup.add_theme_font_size_override("font_size", 11)
 
 	var parent := get_tree().current_scene if get_tree().current_scene != null else self
@@ -125,6 +134,17 @@ func _spawn_revive_effect(color: Color) -> void:
 	tween.tween_property(effect, "modulate:a", 0.0, 0.38)
 	tween.set_parallel(false)
 	tween.tween_callback(effect.queue_free)
+
+
+func _refresh_cost_label() -> void:
+	if cost_label == null:
+		return
+	cost_label.text = "Revive: %d Mana" % corpse_level
+	cost_label.visible = false
+	cost_label.add_theme_color_override("font_color", Color(0.72, 0.95, 1.0, 1.0))
+	cost_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	cost_label.add_theme_constant_override("outline_size", 2)
+	cost_label.add_theme_font_size_override("font_size", 10)
 
 
 func _expire() -> void:

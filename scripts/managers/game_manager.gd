@@ -16,6 +16,8 @@ signal progression_reward_applied(message: String)
 signal attack_commanded(target: Node2D)
 signal attack_command_cleared
 signal skeleton_command_changed(mode: String)
+signal enemy_selection_changed(enemy: Node2D)
+signal combat_logged(message: String)
 
 const SKELETON_SCENE: PackedScene = preload("res://scenes/skeletons/skeleton.tscn")
 const CORPSE_SCENE: PackedScene = preload("res://scenes/world/corpse.tscn")
@@ -23,6 +25,7 @@ const CORPSE_SCENE: PackedScene = preload("res://scenes/world/corpse.tscn")
 var player: Node2D
 var player_stats: Node
 var commanded_attack_target: Node2D
+var selected_enemy: Node2D
 var skeleton_command_mode: String = "follow"
 var enemies: Array[Node2D] = []
 var corpses: Array[Node2D] = []
@@ -57,12 +60,31 @@ func _sync_from_player_stats() -> void:
 
 func command_attack_target(target: Node2D) -> void:
 	commanded_attack_target = target
+	select_enemy(target)
 	attack_commanded.emit(target)
 
 
 func clear_attack_command() -> void:
 	commanded_attack_target = null
 	attack_command_cleared.emit()
+
+
+func select_enemy(enemy: Node2D) -> void:
+	if selected_enemy == enemy:
+		return
+
+	var previous_enemy := selected_enemy
+	selected_enemy = enemy
+	if previous_enemy != null and is_instance_valid(previous_enemy) and previous_enemy.has_method("set_selected"):
+		previous_enemy.set_selected(false)
+	if selected_enemy != null and is_instance_valid(selected_enemy) and selected_enemy.has_method("set_selected"):
+		selected_enemy.set_selected(true)
+	enemy_selection_changed.emit(selected_enemy)
+
+
+func log_combat(message: String) -> void:
+	print(message)
+	combat_logged.emit(message)
 
 
 func set_skeleton_command_mode(mode: String) -> void:
@@ -148,20 +170,24 @@ func can_spawn_skeleton() -> bool:
 	return get_skeleton_count() < skeleton_cap
 
 
-func spawn_skeleton(spawn_position: Vector2, corpse_level: int = 1) -> Node2D:
+func spawn_skeleton(spawn_position: Vector2, corpse_level: int = 1, source_max_health: int = 6, source_damage: int = 1, source_move_speed: float = 135.0) -> Node2D:
 	if not can_spawn_skeleton():
 		print("Skeleton cap reached: %d/%d" % [get_skeleton_count(), skeleton_cap])
 		return null
 
 	var skeleton := SKELETON_SCENE.instantiate() as Node2D
 	skeleton.global_position = spawn_position
-	if player_stats != null and "attack_damage" in skeleton:
-		skeleton.attack_damage += player_stats.get_skeleton_damage_bonus() + maxi(corpse_level - 1, 0)
-		if "attack_cooldown" in skeleton:
-			skeleton.attack_cooldown = maxf(0.45, skeleton.attack_cooldown - player_stats.get_skeleton_attack_speed_bonus())
-		var skeleton_health := get_health_component(skeleton)
-		if skeleton_health != null:
-			skeleton_health.max_health += player_stats.get_skeleton_health_bonus() + (maxi(corpse_level - 1, 0) * 3)
+	var dark_mana_level: int = int(player_stats.black_mana) if player_stats != null and "black_mana" in player_stats else 1
+	var inherited_factor := 0.10 + (float(maxi(dark_mana_level - 1, 0)) * 0.01)
+	if "attack_damage" in skeleton:
+		skeleton.attack_damage = maxi(1, roundi(float(source_damage) * inherited_factor))
+	if "move_speed" in skeleton:
+		skeleton.move_speed = source_move_speed * 0.8
+	if "attack_cooldown" in skeleton and player_stats != null:
+		skeleton.attack_cooldown = maxf(0.45, skeleton.attack_cooldown - player_stats.get_skeleton_attack_speed_bonus())
+	var skeleton_health := get_health_component(skeleton)
+	if skeleton_health != null:
+		skeleton_health.max_health = maxi(1, roundi(float(source_max_health) * inherited_factor))
 	get_tree().current_scene.add_child(skeleton)
 	register_skeleton(skeleton)
 	skeleton_spawned.emit(skeleton)
@@ -169,11 +195,17 @@ func spawn_skeleton(spawn_position: Vector2, corpse_level: int = 1) -> Node2D:
 	return skeleton
 
 
-func spawn_corpse(spawn_position: Vector2, corpse_level: int = 1) -> Node2D:
+func spawn_corpse(spawn_position: Vector2, corpse_level: int = 1, source_max_health: int = 6, source_damage: int = 1, source_move_speed: float = 135.0) -> Node2D:
 	var corpse := CORPSE_SCENE.instantiate() as Node2D
 	corpse.global_position = spawn_position
 	if "corpse_level" in corpse:
 		corpse.corpse_level = corpse_level
+	if "source_max_health" in corpse:
+		corpse.source_max_health = source_max_health
+	if "source_damage" in corpse:
+		corpse.source_damage = source_damage
+	if "source_move_speed" in corpse:
+		corpse.source_move_speed = source_move_speed
 	get_tree().current_scene.add_child(corpse)
 	corpse_spawned.emit(corpse)
 	print("Spawned corpse at %s" % corpse.global_position)
@@ -188,6 +220,10 @@ func record_enemy_kill(enemy: Node2D, source: Node, experience_reward: int = 1) 
 	if player_stats != null:
 		player_stats.add_experience(experience_reward)
 		player_stats.restore_black_mana(1)
+	var enemy_name: String = enemy.name if enemy != null else "Enemy"
+	log_combat("%s killed: +%d EXP, +%d Mana, +%d Essence" % [enemy_name, experience_reward, 1, essence_per_kill])
+	if enemy != null and is_instance_valid(enemy):
+		spawn_reward_popup(enemy.global_position, "+%d EXP" % experience_reward, Color(0.85, 1.0, 0.35, 1.0))
 	print("Enemy killed. Essence: %d. Reward progress: %d/%d" % [essence, kills_since_reward, kills_per_reward])
 
 	if kills_since_reward >= kills_per_reward:
@@ -204,6 +240,32 @@ func _apply_progression_reward() -> void:
 	progression_reward_applied.emit(message)
 
 
+func spawn_reward_popup(world_position: Vector2, message: String, color: Color = Color(0.85, 1.0, 0.35, 1.0)) -> Label:
+	var popup := Label.new()
+	popup.name = "RewardPopup"
+	popup.text = message
+	popup.z_index = 80
+	popup.add_theme_color_override("font_color", color)
+	popup.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	popup.add_theme_constant_override("outline_size", 2)
+	popup.add_theme_font_size_override("font_size", 14)
+
+	var parent := get_tree().current_scene if get_tree().current_scene != null else self
+	parent.add_child(popup)
+	if parent is Node2D:
+		popup.global_position = world_position + Vector2(-18, -34)
+	else:
+		popup.position = world_position + Vector2(-18, -34)
+
+	var tween := popup.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "position", popup.position + Vector2(0, -28), 1.0)
+	tween.tween_property(popup, "modulate:a", 0.0, 1.0)
+	tween.set_parallel(false)
+	tween.tween_callback(popup.queue_free)
+	return popup
+
+
 func save_game() -> void:
 	if player_stats == null:
 		return
@@ -218,6 +280,7 @@ func save_game() -> void:
 		"current_black_mana": player_stats.current_black_mana,
 		"army_size": player_stats.army_size,
 		"movement_speed": player_stats.movement_speed,
+		"mana_regen": player_stats.mana_regen,
 		"skeleton_count": get_skeleton_count()
 	}
 	var file := FileAccess.open("user://necromancer_save.json", FileAccess.WRITE)
@@ -239,9 +302,10 @@ func load_game() -> void:
 	player_stats.stat_points = int(data.get("stat_points", player_stats.stat_points))
 	player_stats.hp = int(data.get("hp", player_stats.hp))
 	player_stats.black_mana = int(data.get("black_mana", player_stats.black_mana))
-	player_stats.current_black_mana = int(data.get("current_black_mana", player_stats.current_black_mana))
+	player_stats.current_black_mana = float(data.get("current_black_mana", player_stats.current_black_mana))
 	player_stats.army_size = int(data.get("army_size", player_stats.army_size))
 	player_stats.movement_speed = int(data.get("movement_speed", player_stats.movement_speed))
+	player_stats.mana_regen = int(data.get("mana_regen", player_stats.mana_regen))
 	player_stats._emit_all()
 	if player != null:
 		var pos: Array = data.get("player_position", [0, 0])

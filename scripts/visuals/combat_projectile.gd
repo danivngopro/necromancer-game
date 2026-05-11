@@ -40,9 +40,45 @@ func _draw() -> void:
 
 
 func _apply_impact() -> void:
+	_spawn_impact_effect()
 	if target != null and is_instance_valid(target):
 		var health := GameManager.get_health_component(target)
 		if health != null and damage > 0:
-			health.apply_damage(damage, source)
+			var valid_source: Node = source if source != null and is_instance_valid(source) else null
+			health.apply_damage(damage, valid_source)
+			GameManager.log_combat("%s takes %d projectile damage" % [target.name, damage])
 		impact.emit(target)
 	queue_free()
+
+
+func _spawn_impact_effect() -> void:
+	var effect := Polygon2D.new()
+	effect.name = "ProjectileImpactEffect"
+	effect.z_index = 70
+	effect.color = Color(projectile_color.r, projectile_color.g, projectile_color.b, 0.48)
+	effect.polygon = PackedVector2Array(
+		[
+			Vector2(0, -12),
+			Vector2(5, -5),
+			Vector2(13, 0),
+			Vector2(5, 5),
+			Vector2(0, 13),
+			Vector2(-5, 5),
+			Vector2(-12, 0),
+			Vector2(-5, -5)
+		]
+	)
+
+	var parent := get_tree().current_scene if get_tree().current_scene != null else self
+	parent.add_child(effect)
+	if parent is Node2D:
+		effect.global_position = target_position
+	else:
+		effect.position = target_position
+
+	var tween := effect.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(effect, "scale", Vector2(2.1, 2.1), 0.9)
+	tween.tween_property(effect, "modulate:a", 0.0, 0.9)
+	tween.set_parallel(false)
+	tween.tween_callback(effect.queue_free)

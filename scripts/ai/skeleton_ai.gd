@@ -130,7 +130,11 @@ func _attack_target() -> void:
 		return
 
 	print("%s attacks %s for %d" % [name, target_enemy.name, attack_damage])
+	var feedback := get_node_or_null("UnitFeedback") as UnitFeedback
+	if feedback != null:
+		feedback.play_attack_animation()
 	var projectile: Node = CombatProjectileScript.new()
+	projectile.name = "CombatProjectile"
 	get_tree().current_scene.add_child(projectile)
 	projectile.launch(global_position, target_enemy, attack_damage, self, Color(0.72, 0.95, 0.66, 1.0))
 	_attack_timer = attack_cooldown

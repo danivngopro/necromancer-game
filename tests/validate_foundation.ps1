@@ -20,11 +20,22 @@ $requiredFiles = @(
     "scripts/ui/army_debug_ui.gd",
     "scripts/player/player_stats.gd",
     "scripts/ui/rpg_debug_ui.gd",
-    "scripts/ui/minimap.gd"
+    "scripts/ui/minimap.gd",
+    "scripts/ui/resource_hud.gd",
+    "scripts/ui/target_frame.gd",
     "scripts/visuals/interaction_feedback.gd",
     "scripts/visuals/combat_projectile.gd",
+    "scripts/visuals/enemy_selection_controller.gd",
     "scripts/ui/command_hud.gd",
-    "docs/asset-scale-style-guide.md"
+    "scripts/ui/combat_log.gd",
+    "docs/asset-scale-style-guide.md",
+    "docs/manual-combat-playtest.md",
+    "assets/sprites/player_placeholder.svg",
+    "assets/sprites/enemy_placeholder.svg",
+    "assets/sprites/skeleton_placeholder.svg",
+    "assets/sprites/corpse_placeholder.svg",
+    "tests/combat_regression_runner.gd",
+    "tests/combat_regression_runner.tscn"
 )
 
 $missing = @()
@@ -46,6 +57,8 @@ $projectText = Get-Content -Raw -LiteralPath "project.godot"
 $requiredProjectSnippets = @(
     'run/main_scene="res://scenes/world/main.tscn"',
     'GameManager="*res://scripts/managers/game_manager.gd"',
+    'window/size/viewport_width=1920',
+    'window/size/viewport_height=1080',
     'move_left',
     'move_right',
     'move_up',
@@ -70,8 +83,15 @@ $scriptExpectations = @{
         "RETURN",
         "DEAD",
         "force_aggro",
+        "set_selected",
+        "set_hovered",
         "enemy_level",
         "configure_level",
+        "pow(2.0",
+        "health.max_health = 4 * level_multiplier",
+        "experience_reward = 2 * level_multiplier",
+        "move_speed = base_move_speed +",
+        "set_name_text",
         "spawn_position",
         "leash_distance",
         "_return_to_spawn",
@@ -91,10 +111,19 @@ $scriptExpectations = @{
         "MOUSE_BUTTON_LEFT",
         "_command_skeleton_attack",
         "_cast_ranged_attack",
-        "cast_cooldown: float = 2.0",
+        "cast_cooldown: float = 3.0",
         "cast_range",
         "_cast_timer = cast_cooldown",
-        "enemy_health.apply_damage(damage, self)"
+        "_next_cast_time_msec",
+        "_can_cast",
+        "_get_cast_target",
+        "_set_cast_target",
+        "_try_fire_cast",
+        "_move_toward_cast_range",
+        "attack_damage: int = 1",
+        "close_cast_assist_range",
+        "projectile.launch(global_position, enemy, damage, self",
+        "show_range_preview"
     )
     "scripts/managers/game_manager.gd" = @(
         "signal skeleton_registered",
@@ -112,16 +141,31 @@ $scriptExpectations = @{
         "enemy_killed",
         "can_spawn_skeleton",
         "record_enemy_kill",
+        "spawn_reward_popup",
+        "source_max_health",
+        "source_damage",
+        "source_move_speed",
+        "inherited_factor",
+        "skeleton.move_speed = source_move_speed * 0.8",
+        "RewardPopup",
+        "+%d EXP",
+        "+%d Mana",
         "player_stats",
         "register_player_stats"
     )
     "scripts/summoning/corpse.gd" = @(
         "expired",
         "lifetime_seconds",
+        "lifetime_seconds: float = 30.0",
+        "source_max_health",
+        "source_damage",
+        "source_move_speed",
         "func _expire",
         "set_highlighted",
         "show_revive_feedback",
-        "RevivePopup"
+        "RevivePopup",
+        "CostLabel",
+        "Revive: %d Mana"
     )
     "scripts/summoning/resurrection_controller.gd" = @(
         "GameManager.can_spawn_skeleton",
@@ -132,6 +176,14 @@ $scriptExpectations = @{
         "class_name UnitFeedback",
         "HealthBar",
         "DamagePopup",
+        "NameLabel",
+        "ManaBar",
+        "ManaLabel",
+        "outline_size",
+        "set_name_text",
+        "animation_frame_count",
+        "region_rect",
+        "play_attack_animation",
         "hit_flash",
         "knockback"
     )
@@ -148,6 +200,13 @@ $scriptExpectations = @{
         "_clamp_player_to_map",
         "enemy_spawn_points",
         "enemy_spawn_levels",
+        "base_enemy_respawn_seconds",
+        "SpawnTimers",
+        "SpawnTimer%d",
+        "RespawnPingRing",
+        "respawn_remaining_by_index",
+        "_on_enemy_killed",
+        "base_enemy_respawn_seconds * (1.0 +",
         "spawn_world_enemies",
         "starting_skeleton_count: int = 0",
         "spawn_starting_skeletons",
@@ -166,10 +225,15 @@ $scriptExpectations = @{
         "hp",
         "black_mana",
         "current_black_mana",
+        "mana_regen",
+        "base_mana_regen_per_second: float = 0.1",
+        "get_mana_regen_rate",
         "spend_black_mana",
         "restore_black_mana",
+        "Mana regen: +%.2f/sec",
         "army_size",
         "movement_speed",
+        "movement_speed: int = 80",
         "get_skeleton_health_bonus",
         "get_skeleton_damage_bonus",
         "increase_stat",
@@ -177,14 +241,18 @@ $scriptExpectations = @{
     )
     "scripts/ui/rpg_debug_ui.gd" = @(
         "class_name RPGDebugUI",
+        'const STAT_ROWS: Array[String] = ["hp", "black_mana", "mana_regen", "army_size", "movement_speed"]',
         "toggle_expanded",
-        "get_tree().paused",
+        "get_tree().paused = false",
         "Button.new",
+        "button.position = Vector2(238, 90",
+        "return GameManager.player_stats != null and GameManager.player_stats.stat_points > 0",
         "Level:",
         "EXP:",
         "Stat Points:",
         "HP",
-        "Black Mana",
+        "Dark Mana",
+        "Mana Regen",
         "Army Size",
         "Movement Speed"
     )
@@ -200,6 +268,8 @@ $scriptExpectations = @{
         "show_move_marker",
         "show_attack_command",
         "show_cast_marker",
+        "show_cast_blocked",
+        "show_range_preview",
         "TargetRing",
         "CommandLine"
     )
@@ -207,15 +277,58 @@ $scriptExpectations = @{
         "class_name CombatProjectile",
         "launch",
         "impact",
+        "valid_source",
+        "ProjectileImpactEffect",
+        "GameManager.log_combat",
         "target_position",
         "travel_speed"
+    )
+    "scripts/visuals/enemy_selection_controller.gd" = @(
+        "class_name EnemySelectionController",
+        "set_hovered",
+        "GameManager.get_nearest_enemy"
     )
     "scripts/ui/command_hud.gd" = @(
         "class_name CommandHUD",
         "Follow",
         "Hold",
         "Attack",
+        "Cast Ready",
+        "update_cast_status",
         "GameManager.skeleton_command_changed"
+    )
+    "scripts/ui/combat_log.gd" = @(
+        "class_name CombatLog",
+        "GameManager.combat_logged",
+        "Combat log ready"
+    )
+    "scripts/ui/resource_hud.gd" = @(
+        "class_name ResourceHUD",
+        "HP %d/%d",
+        "Mana %.1f/%d",
+        "Regen +%.2f/s"
+    )
+    "scripts/ui/target_frame.gd" = @(
+        "class_name TargetFrame",
+        "No Target",
+        "Lv %d %s"
+    )
+    "tests/combat_regression_runner.gd" = @(
+        "Combat regression runner passed",
+        "Level 3 enemies should take 20 percent more respawn time per level",
+        "Respawn timer should be visible while waiting",
+        "Respawn ping ring should be visible while waiting",
+        "Revived skeleton HP should inherit 12 percent",
+        "Revived skeleton speed should inherit 80 percent",
+        "Projectile with freed source should still apply damage safely",
+        "Player cast cooldown should be 3 seconds",
+        "Player auto attack should deal 1 damage",
+        "Player base speed should be 30 percent slower",
+        "Base mana regen should restore 0.1 mana per second",
+        "Ranged cast should not deal immediate damage",
+        "Projectile impact should damage enemy",
+        "Enemy should enter RETURN when leash is exceeded",
+        "Level 3 enemy health should be 16"
     )
 }
 
@@ -235,7 +348,11 @@ $sceneExpectations = @{
         "RPGDebugUI",
         "Minimap",
         "CommandHUD",
+        "ResourceHUD",
+        "TargetFrame",
+        "CombatLog",
         "InteractionFeedback",
+        "EnemySelectionController",
         "WorldObstacles",
         "WorldBorder",
         "SafeArea",
@@ -243,22 +360,37 @@ $sceneExpectations = @{
     )
     "scenes/player/player.tscn" = @(
         "PlayerStats",
+        "player_placeholder.svg",
+        "Sprite2D",
         "UnitFeedback",
         "HealthBar",
-        "HpLabel"
+        "HpLabel",
+        "ManaBar",
+        "ManaLabel",
+        "zoom = Vector2(1.75, 1.75)"
     )
     "scenes/enemies/basic_enemy.tscn" = @(
         "UnitFeedback",
+        "enemy_placeholder.svg",
+        "Sprite2D",
+        "NameLabel",
         "HealthBar",
-        "HpLabel"
+        "HpLabel",
+        "SelectionOutline",
+        "HoverOutline"
     )
     "scenes/skeletons/skeleton.tscn" = @(
         "UnitFeedback",
+        "skeleton_placeholder.svg",
+        "Sprite2D",
         "HealthBar",
         "HpLabel"
     )
     "scenes/world/corpse.tscn" = @(
         "Highlight",
+        "corpse_placeholder.svg",
+        "Sprite2D",
+        "CostLabel",
         "ReviveEffectAnchor",
         "RevivePopupAnchor"
     )

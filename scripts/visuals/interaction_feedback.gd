@@ -24,6 +24,15 @@ func show_cast_marker(from_position: Vector2, target: Node2D) -> void:
 	_spawn_line("CastLine", from_position, target.global_position, Color(0.55, 0.35, 1.0, 0.45), marker_lifetime)
 
 
+func show_cast_blocked(world_position: Vector2, reason: String) -> void:
+	_spawn_ring("BlockedCastMarker", world_position, Color(0.95, 0.1, 0.08, 0.85), 10.0, 0.35)
+	_spawn_popup(world_position + Vector2(-24, -28), reason, Color(1.0, 0.22, 0.12, 1.0), 0.45)
+
+
+func show_range_preview(center_position: Vector2, radius: float) -> void:
+	_spawn_ring("CastRangePreview", center_position, Color(0.55, 0.35, 1.0, 0.32), radius, 0.45)
+
+
 func _spawn_ring(marker_name: String, world_position: Vector2, color: Color, radius: float, lifetime: float) -> void:
 	var ring := Line2D.new()
 	ring.name = marker_name
@@ -59,3 +68,21 @@ func _spawn_line(line_name: String, from_position: Vector2, to_position: Vector2
 	var tween := line.create_tween()
 	tween.tween_property(line, "modulate:a", 0.0, lifetime)
 	tween.tween_callback(line.queue_free)
+
+
+func _spawn_popup(world_position: Vector2, text: String, color: Color, lifetime: float) -> void:
+	var popup := Label.new()
+	popup.name = "CastFeedbackPopup"
+	popup.text = text
+	popup.z_index = 70
+	popup.add_theme_color_override("font_color", color)
+	popup.add_theme_font_size_override("font_size", 11)
+	add_child(popup)
+	popup.global_position = world_position
+
+	var tween := popup.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(popup, "global_position", world_position + Vector2(0, -14), lifetime)
+	tween.tween_property(popup, "modulate:a", 0.0, lifetime)
+	tween.set_parallel(false)
+	tween.tween_callback(popup.queue_free)

@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://basic_jungle_enemy"]
+[gd_scene load_steps=8 format=3 uid="uid://basic_jungle_enemy"]
 
 [ext_resource type="Script" path="res://scripts/ai/enemy_ai.gd" id="1_enemy"]
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://scripts/visuals/unit_feedback.gd" id="3_feedback"]
 [ext_resource type="Script" path="res://scripts/visuals/range_gizmo.gd" id="4_range"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemy_placeholder.svg" id="5_enemy_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 9.0
@@ -13,9 +14,24 @@ collision_layer = 4
 collision_mask = 7
 script = ExtResource("1_enemy")
 
-[node name="Body" type="Polygon2D" parent="."]
-color = Color(0.08, 0.36, 0.12, 1)
-polygon = PackedVector2Array(0, -10, 11, 0, 5, 11, -5, 11, -11, 0)
+[node name="Body" type="Sprite2D" parent="."]
+texture = ExtResource("5_enemy_sprite")
+
+[node name="SelectionOutline" type="Line2D" parent="."]
+visible = false
+z_index = 8
+points = PackedVector2Array(0, -15, 13, -6, 13, 8, 0, 16, -13, 8, -13, -6, 0, -15)
+width = 2.0
+closed = true
+default_color = Color(1, 0.86, 0.22, 1)
+
+[node name="HoverOutline" type="Line2D" parent="."]
+visible = false
+z_index = 7
+points = PackedVector2Array(0, -13, 11, -5, 11, 7, 0, 14, -11, 7, -11, -5, 0, -13)
+width = 1.5
+closed = true
+default_color = Color(0.85, 1, 1, 0.85)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
@@ -27,19 +43,33 @@ max_health = 8
 [node name="UnitFeedback" type="Node2D" parent="."]
 script = ExtResource("3_feedback")
 
+[node name="NameLabel" type="Label" parent="UnitFeedback"]
+offset_left = -34.0
+offset_top = -50.0
+offset_right = 42.0
+offset_bottom = -31.0
+theme_override_colors/font_color = Color(1, 0.95, 0.68, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
 [node name="HealthBar" type="ProgressBar" parent="UnitFeedback"]
-offset_left = -18.0
-offset_top = -28.0
-offset_right = 18.0
-offset_bottom = -22.0
+offset_left = -26.0
+offset_top = -31.0
+offset_right = 26.0
+offset_bottom = -24.0
 show_percentage = false
 
 [node name="HpLabel" type="Label" parent="UnitFeedback"]
-offset_left = -16.0
-offset_top = -41.0
-offset_right = 28.0
-offset_bottom = -21.0
-theme_override_font_sizes/font_size = 8
+offset_left = -24.0
+offset_top = -35.0
+offset_right = 34.0
+offset_bottom = -16.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [node name="RangeGizmo" type="Node2D" parent="."]
 script = ExtResource("4_range")

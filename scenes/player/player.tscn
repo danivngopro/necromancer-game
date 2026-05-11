@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://player_necromancer"]
+[gd_scene load_steps=10 format=3 uid="uid://player_necromancer"]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/visuals/unit_feedback.gd" id="4_feedback"]
 [ext_resource type="Script" path="res://scripts/visuals/range_gizmo.gd" id="5_range"]
 [ext_resource type="Script" path="res://scripts/player/player_stats.gd" id="6_stats"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player_placeholder.svg" id="7_player_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 10.0
@@ -18,9 +19,8 @@ collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_player")
 
-[node name="Body" type="Polygon2D" parent="."]
-color = Color(0.25, 0.06, 0.31, 1)
-polygon = PackedVector2Array(0, -14, 10, 7, 0, 14, -10, 7)
+[node name="Body" type="Sprite2D" parent="."]
+texture = ExtResource("7_player_sprite")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
@@ -37,17 +37,35 @@ script = ExtResource("4_feedback")
 
 [node name="HealthBar" type="ProgressBar" parent="UnitFeedback"]
 offset_left = -18.0
-offset_top = -31.0
+offset_top = -27.0
 offset_right = 18.0
-offset_bottom = -25.0
+offset_bottom = -21.0
 show_percentage = false
 
 [node name="HpLabel" type="Label" parent="UnitFeedback"]
-offset_left = -19.0
-offset_top = -44.0
-offset_right = 28.0
-offset_bottom = -24.0
-theme_override_font_sizes/font_size = 8
+offset_left = -24.0
+offset_top = -33.0
+offset_right = 34.0
+offset_bottom = -14.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+
+[node name="ManaBar" type="ProgressBar" parent="UnitFeedback"]
+offset_left = -18.0
+offset_top = -18.0
+offset_right = 18.0
+offset_bottom = -12.0
+show_percentage = false
+
+[node name="ManaLabel" type="Label" parent="UnitFeedback"]
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 34.0
+offset_bottom = -5.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
 
 [node name="RangeGizmo" type="Node2D" parent="."]
 script = ExtResource("5_range")
@@ -64,5 +82,5 @@ shape = SubResource("CircleShape2D_resurrection")
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
-zoom = Vector2(3, 3)
+zoom = Vector2(1.75, 1.75)
 enabled = true

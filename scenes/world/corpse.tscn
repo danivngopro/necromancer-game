@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://revivable_corpse"]
+[gd_scene load_steps=5 format=3 uid="uid://revivable_corpse"]
 
 [ext_resource type="Script" path="res://scripts/summoning/corpse.gd" id="1_corpse"]
+[ext_resource type="Texture2D" path="res://assets/sprites/corpse_placeholder.svg" id="2_corpse_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 12.0
@@ -10,9 +11,8 @@ collision_layer = 8
 collision_mask = 0
 script = ExtResource("1_corpse")
 
-[node name="Body" type="Polygon2D" parent="."]
-color = Color(0.22, 0.18, 0.15, 1)
-polygon = PackedVector2Array(-12, -5, 8, -8, 13, 2, -8, 7)
+[node name="Body" type="Sprite2D" parent="."]
+texture = ExtResource("2_corpse_sprite")
 
 [node name="Highlight" type="Polygon2D" parent="."]
 visible = false
@@ -22,6 +22,18 @@ polygon = PackedVector2Array(0, -17, 12, -12, 17, 0, 12, 12, 0, 17, -12, 12, -17
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
+
+[node name="CostLabel" type="Label" parent="."]
+visible = false
+offset_left = -38.0
+offset_top = -33.0
+offset_right = 42.0
+offset_bottom = -14.0
+theme_override_colors/font_color = Color(0.72, 0.95, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [node name="RevivePopupAnchor" type="Node2D" parent="."]
 

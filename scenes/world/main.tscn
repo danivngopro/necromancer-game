@@ -1,31 +1,39 @@
-[gd_scene load_steps=15 format=3 uid="uid://main_game_scene"]
+[gd_scene format=3 uid="uid://d0l4nmb6j50j6"]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/basic_enemy.tscn" id="2_enemy"]
-[ext_resource type="Script" path="res://scripts/world/main.gd" id="3_main"]
-[ext_resource type="Script" path="res://scripts/ui/rpg_debug_ui.gd" id="4_rpg_ui"]
-[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="5_minimap"]
-[ext_resource type="Script" path="res://scripts/ui/command_hud.gd" id="6_command"]
-[ext_resource type="Script" path="res://scripts/visuals/interaction_feedback.gd" id="7_feedback"]
-[ext_resource type="Script" path="res://scripts/visuals/enemy_selection_controller.gd" id="8_selection"]
-[ext_resource type="Script" path="res://scripts/ui/combat_log.gd" id="9_log"]
-[ext_resource type="Script" path="res://scripts/ui/resource_hud.gd" id="10_resource_hud"]
-[ext_resource type="Script" path="res://scripts/ui/target_frame.gd" id="11_target_frame"]
+[ext_resource type="Script" uid="uid://or34bsy85nxp" path="res://scripts/world/main.gd" id="3_main"]
+[ext_resource type="Script" uid="uid://di88f4nfq74tx" path="res://scripts/ui/rpg_debug_ui.gd" id="4_rpg_ui"]
+[ext_resource type="Script" uid="uid://c6ydr5d3b4geh" path="res://scripts/ui/minimap.gd" id="5_minimap"]
+[ext_resource type="Script" uid="uid://dglsuwpl625io" path="res://scripts/ui/command_hud.gd" id="6_command"]
+[ext_resource type="Script" uid="uid://cgxrv3nk8pe48" path="res://scripts/visuals/interaction_feedback.gd" id="7_feedback"]
+[ext_resource type="Script" uid="uid://cwspnkb2co1xt" path="res://scripts/visuals/enemy_selection_controller.gd" id="8_selection"]
+[ext_resource type="Script" uid="uid://c5jnv655rlkyn" path="res://scripts/ui/combat_log.gd" id="9_log"]
+[ext_resource type="Script" uid="uid://ba4beukwkytm3" path="res://scripts/ui/resource_hud.gd" id="10_resource_hud"]
+[ext_resource type="Script" uid="uid://dgjicydxi4l7j" path="res://scripts/ui/target_frame.gd" id="11_target_frame"]
+[ext_resource type="Script" path="res://scripts/ui/unit_nameplate_overlay.gd" id="12_nameplates"]
+[ext_resource type="Script" path="res://scripts/world/forest_tile_map.gd" id="13_forest_tilemap"]
+[ext_resource type="Script" path="res://scripts/visuals/raw_texture_sprite.gd" id="14_raw_sprite"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle_wide"]
-size = Vector2(170, 34)
+size = Vector2(96, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle_tall"]
-size = Vector2(42, 150)
+size = Vector2(38, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle_block"]
-size = Vector2(86, 72)
+size = Vector2(84, 44)
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1331834961]
 script = ExtResource("3_main")
 basic_enemy_scene = ExtResource("2_enemy")
 
-[node name="Ground" type="ColorRect" parent="."]
+[node name="ForestTileMap" type="TileMap" parent="." unique_id=1538194474]
+z_index = -10
+script = ExtResource("13_forest_tilemap")
+
+[node name="Ground" type="ColorRect" parent="." unique_id=186359355]
+visible = false
 offset_left = -700.0
 offset_top = -260.0
 offset_right = 700.0
@@ -33,7 +41,8 @@ offset_bottom = 980.0
 mouse_filter = 2
 color = Color(0.045, 0.12, 0.075, 1)
 
-[node name="SafeArea" type="ColorRect" parent="."]
+[node name="SafeArea" type="ColorRect" parent="." unique_id=1599955915]
+visible = false
 offset_left = -150.0
 offset_top = -150.0
 offset_right = 150.0
@@ -41,7 +50,8 @@ offset_bottom = 90.0
 mouse_filter = 2
 color = Color(0.06, 0.2, 0.12, 1)
 
-[node name="Path" type="ColorRect" parent="."]
+[node name="Path" type="ColorRect" parent="." unique_id=1086414100]
+visible = false
 offset_left = -46.0
 offset_top = -220.0
 offset_right = 46.0
@@ -49,7 +59,8 @@ offset_bottom = 940.0
 mouse_filter = 2
 color = Color(0.12, 0.17, 0.09, 1)
 
-[node name="PathBranch" type="ColorRect" parent="."]
+[node name="PathBranch" type="ColorRect" parent="." unique_id=1684452987]
+visible = false
 offset_left = -520.0
 offset_top = 300.0
 offset_right = 520.0
@@ -57,47 +68,48 @@ offset_bottom = 382.0
 mouse_filter = 2
 color = Color(0.12, 0.17, 0.09, 1)
 
-[node name="WorldObstacles" type="Node2D" parent="."]
+[node name="WorldObstacles" type="Node2D" parent="." unique_id=2003255795]
 
-[node name="NorthRock" type="StaticBody2D" parent="WorldObstacles"]
+[node name="NorthRock" type="StaticBody2D" parent="WorldObstacles" unique_id=369136984]
 position = Vector2(-260, 190)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Visual" type="Polygon2D" parent="WorldObstacles/NorthRock"]
-color = Color(0.075, 0.18, 0.09, 1)
-polygon = PackedVector2Array(-85, -17, 85, -17, 85, 17, -85, 17)
+[node name="Visual" type="Sprite2D" parent="WorldObstacles/NorthRock" unique_id=1627169287]
+scale = Vector2(2.4, 2.4)
+script = ExtResource("14_raw_sprite")
+texture_path = "res://assets/sprites/kenney/props/rock_large_gray.png"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/NorthRock"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/NorthRock" unique_id=1368749585]
 shape = SubResource("RectangleShape2D_obstacle_wide")
 
-[node name="EastThicket" type="StaticBody2D" parent="WorldObstacles"]
+[node name="EastThicket" type="StaticBody2D" parent="WorldObstacles" unique_id=514533961]
 position = Vector2(520, 230)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Visual" type="Polygon2D" parent="WorldObstacles/EastThicket"]
-color = Color(0.055, 0.22, 0.08, 1)
-polygon = PackedVector2Array(-21, -75, 21, -75, 21, 75, -21, 75)
+[node name="Visual" type="Sprite2D" parent="WorldObstacles/EastThicket" unique_id=1016270101]
+scale = Vector2(2.1, 2.1)
+script = ExtResource("14_raw_sprite")
+texture_path = "res://assets/sprites/kenney/props/tree_round.png"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/EastThicket"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/EastThicket" unique_id=1176789009]
 shape = SubResource("RectangleShape2D_obstacle_tall")
 
-[node name="SouthRuin" type="StaticBody2D" parent="WorldObstacles"]
+[node name="SouthRuin" type="StaticBody2D" parent="WorldObstacles" unique_id=477724719]
 position = Vector2(-450, 660)
-collision_layer = 1
 collision_mask = 0
 
-[node name="Visual" type="Polygon2D" parent="WorldObstacles/SouthRuin"]
-color = Color(0.13, 0.15, 0.12, 1)
-polygon = PackedVector2Array(-43, -36, 43, -36, 43, 36, -43, 36)
+[node name="Visual" type="Sprite2D" parent="WorldObstacles/SouthRuin" unique_id=1650069313]
+scale = Vector2(2.2, 2.2)
+script = ExtResource("14_raw_sprite")
+texture_path = "res://assets/sprites/kenney/props/ruin_wall_tan.png"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/SouthRuin"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldObstacles/SouthRuin" unique_id=1872932705]
 shape = SubResource("RectangleShape2D_obstacle_block")
 
-[node name="WorldBorder" type="Node2D" parent="."]
+[node name="WorldBorder" type="Node2D" parent="." unique_id=100088652]
+visible = false
 
-[node name="Top" type="ColorRect" parent="WorldBorder"]
+[node name="Top" type="ColorRect" parent="WorldBorder" unique_id=1363594874]
 offset_left = -720.0
 offset_top = -280.0
 offset_right = 720.0
@@ -105,7 +117,7 @@ offset_bottom = -260.0
 mouse_filter = 2
 color = Color(0.1, 0.26, 0.06, 1)
 
-[node name="Bottom" type="ColorRect" parent="WorldBorder"]
+[node name="Bottom" type="ColorRect" parent="WorldBorder" unique_id=1021264047]
 offset_left = -720.0
 offset_top = 980.0
 offset_right = 720.0
@@ -113,7 +125,7 @@ offset_bottom = 1000.0
 mouse_filter = 2
 color = Color(0.1, 0.26, 0.06, 1)
 
-[node name="Left" type="ColorRect" parent="WorldBorder"]
+[node name="Left" type="ColorRect" parent="WorldBorder" unique_id=844433461]
 offset_left = -720.0
 offset_top = -260.0
 offset_right = -700.0
@@ -121,7 +133,7 @@ offset_bottom = 980.0
 mouse_filter = 2
 color = Color(0.1, 0.26, 0.06, 1)
 
-[node name="Right" type="ColorRect" parent="WorldBorder"]
+[node name="Right" type="ColorRect" parent="WorldBorder" unique_id=1031378431]
 offset_left = 700.0
 offset_top = -260.0
 offset_right = 720.0
@@ -129,28 +141,36 @@ offset_bottom = 980.0
 mouse_filter = 2
 color = Color(0.1, 0.26, 0.06, 1)
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
-position = Vector2(0, 0)
+[node name="Player" parent="." unique_id=764736308 instance=ExtResource("1_player")]
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=93204802]
 
-[node name="InteractionFeedback" type="Node2D" parent="."]
+[node name="InteractionFeedback" type="Node2D" parent="." unique_id=1907357341]
 script = ExtResource("7_feedback")
 
-[node name="EnemySelectionController" type="Node" parent="."]
+[node name="EnemySelectionController" type="Node" parent="." unique_id=1826187376]
 script = ExtResource("8_selection")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=1314252334]
 
-[node name="RPGDebugUI" type="Label" parent="UI"]
+[node name="UnitNameplateOverlay" type="Control" parent="UI" unique_id=966677898]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("12_nameplates")
+
+[node name="RPGDebugUI" type="PanelContainer" parent="UI" unique_id=1042568591]
 offset_left = 16.0
 offset_top = 138.0
-offset_right = 276.0
-offset_bottom = 294.0
-theme_override_font_sizes/font_size = 14
+offset_right = 284.0
+offset_bottom = 378.0
 script = ExtResource("4_rpg_ui")
 
-[node name="ResourceHUD" type="VBoxContainer" parent="UI"]
+[node name="ResourceHUD" type="VBoxContainer" parent="UI" unique_id=619890477]
 offset_left = 16.0
 offset_top = 14.0
 offset_right = 250.0
@@ -158,14 +178,16 @@ offset_bottom = 120.0
 theme_override_constants/separation = 3
 script = ExtResource("10_resource_hud")
 
-[node name="Minimap" type="Control" parent="UI"]
+[node name="Minimap" type="Control" parent="UI" unique_id=2113792294]
+layout_mode = 3
+anchors_preset = 0
 offset_left = 1100.0
 offset_top = 18.0
 offset_right = 1268.0
 offset_bottom = 166.0
 script = ExtResource("5_minimap")
 
-[node name="CommandHUD" type="HBoxContainer" parent="UI"]
+[node name="CommandHUD" type="HBoxContainer" parent="UI" unique_id=90063211]
 offset_left = 486.0
 offset_top = 18.0
 offset_right = 794.0
@@ -173,7 +195,7 @@ offset_bottom = 48.0
 theme_override_constants/separation = 8
 script = ExtResource("6_command")
 
-[node name="TargetFrame" type="VBoxContainer" parent="UI"]
+[node name="TargetFrame" type="VBoxContainer" parent="UI" unique_id=1434594187]
 offset_left = 486.0
 offset_top = 58.0
 offset_right = 794.0
@@ -181,7 +203,8 @@ offset_bottom = 132.0
 theme_override_constants/separation = 3
 script = ExtResource("11_target_frame")
 
-[node name="CombatLog" type="Label" parent="UI"]
+[node name="CombatLog" type="Label" parent="UI" unique_id=529869376]
+visible = false
 offset_left = 896.0
 offset_top = 518.0
 offset_right = 1268.0

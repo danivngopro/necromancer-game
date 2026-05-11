@@ -18,12 +18,15 @@ extends Node2D
 
 @onready var enemies_root: Node2D = $Enemies
 @onready var player: Node2D = $Player
+@onready var forest_tile_map: ForestTileMap = get_node_or_null("ForestTileMap") as ForestTileMap
 
 var respawn_remaining_by_index: Array[float] = []
 var spawn_timer_labels: Array[Label] = []
 var spawn_respawn_rings: Array[Line2D] = []
 
 func _ready() -> void:
+	if forest_tile_map != null:
+		forest_tile_map.register_world_blockers($WorldObstacles)
 	GameManager.enemy_killed.connect(_on_enemy_killed)
 	_create_spawn_timer_labels()
 	spawn_starting_skeletons()
@@ -67,7 +70,8 @@ func spawn_enemy_at_index(index: int) -> Node2D:
 	if enemies_root == null or basic_enemy_scene == null or index < 0 or index >= enemy_spawn_points.size():
 		return null
 
-	var spawn_point := enemy_spawn_points[index]
+	var requested_spawn_point := enemy_spawn_points[index]
+	var spawn_point := _get_spawn_point(requested_spawn_point)
 	var enemy := basic_enemy_scene.instantiate() as Node2D
 	var level := enemy_spawn_levels[index] if index < enemy_spawn_levels.size() else 1
 	enemy.global_position = spawn_point
@@ -81,6 +85,18 @@ func spawn_enemy_at_index(index: int) -> Node2D:
 	_refresh_spawn_label(index)
 	print("Spawned world enemy %s at %s" % [enemy.name, enemy.global_position])
 	return enemy
+
+
+func _get_spawn_point(requested_spawn_point: Vector2) -> Vector2:
+	if forest_tile_map != null:
+		return forest_tile_map.get_spawn_safe_position(requested_spawn_point)
+	return requested_spawn_point
+
+
+func get_path_next_position(from_world: Vector2, to_world: Vector2) -> Vector2:
+	if forest_tile_map != null:
+		return forest_tile_map.get_path_next_position(from_world, to_world)
+	return to_world
 
 
 func _on_enemy_killed(enemy: Node2D, _source: Node) -> void:

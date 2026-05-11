@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://scripts/visuals/unit_feedback.gd" id="4_feedback"]
 [ext_resource type="Script" path="res://scripts/visuals/range_gizmo.gd" id="5_range"]
 [ext_resource type="Script" path="res://scripts/player/player_stats.gd" id="6_stats"]
-[ext_resource type="Texture2D" path="res://assets/sprites/player_sheet.png" id="7_player_sprite"]
+[ext_resource type="Script" path="res://scripts/visuals/unit_sprite_animator.gd" id="7_anim"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 10.0
@@ -19,8 +19,10 @@ collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_player")
 
-[node name="Body" type="Sprite2D" parent="."]
-texture = ExtResource("7_player_sprite")
+[node name="Body" type="AnimatedSprite2D" parent="."]
+script = ExtResource("7_anim")
+sprite_kind = "player"
+frame_scale = Vector2(0.48, 0.48)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
@@ -69,7 +71,7 @@ theme_override_font_sizes/font_size = 10
 
 [node name="RangeGizmo" type="Node2D" parent="."]
 script = ExtResource("5_range")
-attack_range = 260.0
+attack_range = 220.0
 
 [node name="ResurrectionController" type="Area2D" parent="."]
 collision_layer = 0
@@ -83,4 +85,8 @@ shape = SubResource("CircleShape2D_resurrection")
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 zoom = Vector2(1.75, 1.75)
+limit_left = -700
+limit_top = -260
+limit_right = 700
+limit_bottom = 980
 enabled = true

@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/combat/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://scripts/visuals/unit_feedback.gd" id="3_feedback"]
 [ext_resource type="Script" path="res://scripts/visuals/range_gizmo.gd" id="4_range"]
-[ext_resource type="Texture2D" path="res://assets/sprites/skeleton_sheet.png" id="5_skeleton_sprite"]
+[ext_resource type="Script" path="res://scripts/visuals/unit_sprite_animator.gd" id="5_anim"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 8.0
@@ -16,8 +16,10 @@ script = ExtResource("1_skeleton")
 attack_damage = 1
 attack_cooldown = 1.15
 
-[node name="Body" type="Sprite2D" parent="."]
-texture = ExtResource("5_skeleton_sprite")
+[node name="Body" type="AnimatedSprite2D" parent="."]
+script = ExtResource("5_anim")
+sprite_kind = "skeleton"
+frame_scale = Vector2(0.82, 0.82)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")

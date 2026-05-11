@@ -11,6 +11,7 @@ signal black_mana_changed(current_black_mana: float, max_black_mana: int)
 @export var experience: int = 0
 @export var stat_points: int = 0
 @export var hp: int = 4
+@export var strength: int = 0
 @export var black_mana: int = 1
 @export var current_black_mana: float = 1.0
 @export var army_size: int = 1
@@ -64,6 +65,10 @@ func get_skeleton_damage_bonus() -> int:
 	return maxi(black_mana - 1, 0)
 
 
+func get_player_damage_bonus() -> float:
+	return float(strength) * 0.1
+
+
 func get_skeleton_attack_speed_bonus() -> float:
 	return float(maxi(black_mana - 1, 0)) * 0.05
 
@@ -102,6 +107,8 @@ func increase_stat(stat_name: String) -> bool:
 	match stat_name:
 		"hp":
 			hp += 2
+		"strength":
+			strength += 1
 		"black_mana":
 			black_mana += 1
 			current_black_mana = black_mana
@@ -112,9 +119,6 @@ func increase_stat(stat_name: String) -> bool:
 			movement_speed += 10
 		"mana_regen":
 			mana_regen += 1
-			black_mana += 1
-			current_black_mana = minf(current_black_mana + 1.0, float(black_mana))
-			black_mana_changed.emit(current_black_mana, black_mana)
 		_:
 			return false
 
@@ -129,7 +133,7 @@ func increase_stat(stat_name: String) -> bool:
 
 func _level_up() -> void:
 	level += 1
-	stat_points += 1
+	stat_points += 2
 	level_changed.emit(level)
 	stat_points_changed.emit(stat_points)
 	stats_changed.emit()

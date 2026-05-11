@@ -57,6 +57,12 @@ func _refresh() -> void:
 	var level: int = int(current_target.enemy_level) if "enemy_level" in current_target else 1
 	title_label.text = "Lv %d %s" % [level, current_target.name]
 	if health != null:
-		health_label.text = "%d/%d HP" % [health.current_health, health.max_health]
+		health_label.text = "%s/%d HP" % [_format_amount(health.current_health), health.max_health]
 		health_bar.max_value = health.max_health
 		health_bar.value = health.current_health
+
+
+func _format_amount(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return "%d" % int(roundf(value))
+	return "%.1f" % value

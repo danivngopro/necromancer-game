@@ -83,7 +83,8 @@ func _update_state() -> void:
 
 func _chase_target() -> void:
 	var attack_position := GameManager.get_skeleton_attack_position(self, target_enemy, attack_slot_radius)
-	var to_target := attack_position - global_position
+	var next_position := _get_path_next_position(attack_position)
+	var to_target := next_position - global_position
 	velocity = to_target.normalized() * move_speed
 	move_and_slide()
 
@@ -100,7 +101,8 @@ func _follow_player() -> void:
 		return
 
 	var formation_position := GameManager.get_skeleton_formation_position(self, follow_distance)
-	var to_formation := formation_position - global_position
+	var next_position := _get_path_next_position(formation_position)
+	var to_formation := next_position - global_position
 	if to_formation.length() > 8.0:
 		velocity = to_formation.normalized() * move_speed
 	else:
@@ -111,7 +113,8 @@ func _follow_player() -> void:
 func _move_to_hold_position() -> void:
 	var to_hold := hold_position - global_position
 	if to_hold.length() > 8.0:
-		velocity = to_hold.normalized() * move_speed
+		var next_position := _get_path_next_position(hold_position)
+		velocity = (next_position - global_position).normalized() * move_speed
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
@@ -130,6 +133,9 @@ func _attack_target() -> void:
 		return
 
 	print("%s attacks %s for %d" % [name, target_enemy.name, attack_damage])
+	var body := get_node_or_null("Body")
+	if body != null and body.has_method("face_toward"):
+		body.call("face_toward", target_enemy.global_position)
 	var feedback := get_node_or_null("UnitFeedback") as UnitFeedback
 	if feedback != null:
 		feedback.play_attack_animation()
@@ -165,6 +171,13 @@ func _get_nearest_active_enemy() -> Node2D:
 			nearest_distance = distance
 
 	return nearest_enemy
+
+
+func _get_path_next_position(destination: Vector2) -> Vector2:
+	var main := get_tree().current_scene
+	if main != null and main.has_method("get_path_next_position"):
+		return main.get_path_next_position(global_position, destination)
+	return destination
 
 
 func _on_died(_source: Node) -> void:

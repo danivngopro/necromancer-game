@@ -8,11 +8,11 @@ signal impact(target: Node2D)
 
 var target: Node2D
 var target_position: Vector2
-var damage: int = 0
+var damage: float = 0.0
 var source: Node
 var projectile_color: Color = Color(0.65, 0.35, 1.0, 1.0)
 
-func launch(start_position: Vector2, new_target: Node2D, new_damage: int, new_source: Node, color: Color = Color(0.65, 0.35, 1.0, 1.0)) -> void:
+func launch(start_position: Vector2, new_target: Node2D, new_damage: float, new_source: Node, color: Color = Color(0.65, 0.35, 1.0, 1.0)) -> void:
 	global_position = start_position
 	target = new_target
 	damage = new_damage
@@ -43,10 +43,10 @@ func _apply_impact() -> void:
 	_spawn_impact_effect()
 	if target != null and is_instance_valid(target):
 		var health := GameManager.get_health_component(target)
-		if health != null and damage > 0:
+		if health != null and damage > 0.0:
 			var valid_source: Node = source if source != null and is_instance_valid(source) else null
 			health.apply_damage(damage, valid_source)
-			GameManager.log_combat("%s takes %d projectile damage" % [target.name, damage])
+			GameManager.log_combat("%s takes %s projectile damage" % [target.name, _format_amount(damage)])
 		impact.emit(target)
 	queue_free()
 
@@ -82,3 +82,9 @@ func _spawn_impact_effect() -> void:
 	tween.tween_property(effect, "modulate:a", 0.0, 0.9)
 	tween.set_parallel(false)
 	tween.tween_callback(effect.queue_free)
+
+
+func _format_amount(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return "%d" % int(roundf(value))
+	return "%.1f" % value

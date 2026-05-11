@@ -177,8 +177,7 @@ func spawn_skeleton(spawn_position: Vector2, corpse_level: int = 1, source_max_h
 
 	var skeleton := SKELETON_SCENE.instantiate() as Node2D
 	skeleton.global_position = spawn_position
-	var dark_mana_level: int = int(player_stats.black_mana) if player_stats != null and "black_mana" in player_stats else 1
-	var inherited_factor := 0.10 + (float(maxi(dark_mana_level - 1, 0)) * 0.01)
+	var inherited_factor := 0.50
 	if "attack_damage" in skeleton:
 		skeleton.attack_damage = maxi(1, roundi(float(source_damage) * inherited_factor))
 	if "move_speed" in skeleton:
@@ -276,6 +275,7 @@ func save_game() -> void:
 		"experience": player_stats.experience,
 		"stat_points": player_stats.stat_points,
 		"hp": player_stats.hp,
+		"strength": player_stats.strength,
 		"black_mana": player_stats.black_mana,
 		"current_black_mana": player_stats.current_black_mana,
 		"army_size": player_stats.army_size,
@@ -301,6 +301,7 @@ func load_game() -> void:
 	player_stats.experience = int(data.get("experience", player_stats.experience))
 	player_stats.stat_points = int(data.get("stat_points", player_stats.stat_points))
 	player_stats.hp = int(data.get("hp", player_stats.hp))
+	player_stats.strength = int(data.get("strength", player_stats.strength))
 	player_stats.black_mana = int(data.get("black_mana", player_stats.black_mana))
 	player_stats.current_black_mana = float(data.get("current_black_mana", player_stats.current_black_mana))
 	player_stats.army_size = int(data.get("army_size", player_stats.army_size))

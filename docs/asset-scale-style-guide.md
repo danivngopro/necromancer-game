@@ -1,5 +1,3 @@
-# Asset Scale And Style Guide
-
 This project is still in placeholder-art mode. Use this guide before importing better character art or models.
 
 ## Scale
@@ -27,3 +25,8 @@ This project is still in placeholder-art mode. Use this guide before importing b
 1. Replace player, skeleton, enemy, and corpse silhouettes with simple 2D sprites or animated placeholders.
 2. Verify scale in the real camera.
 3. Add final models or polished sprites only after movement, targeting, and collision still read clearly.
+
+## Current External Art
+
+- Kenney Roguelike/RPG pack: CC0, source `https://kenney.nl/assets/roguelike-rpg-pack`.
+- Use the transparent spritesheet crops under `assets/sprites/kenney/props/` for forest props and ruins. Do not use the old `assets/sprites/opengameart/forest_props/` crops for gameplay props; those contain baked background colors.

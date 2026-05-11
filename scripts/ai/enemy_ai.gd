@@ -11,7 +11,7 @@ enum State { IDLE, CHASE, ATTACK, RETURN, DEAD }
 @export var detection_range: float = 130.0
 @export var attack_range: float = 28.0
 @export var attack_cooldown: float = 0.85
-@export var leash_distance: float = 220.0
+@export var leash_distance: float = 240.0
 @export var return_arrival_distance: float = 8.0
 @export var patrol_radius: float = 24.0
 
@@ -104,7 +104,8 @@ func _idle() -> void:
 
 
 func _chase_target() -> void:
-	var to_target := target.global_position - global_position
+	var next_position := _get_path_next_position(target.global_position)
+	var to_target := next_position - global_position
 	velocity = to_target.normalized() * move_speed
 	move_and_slide()
 
@@ -122,6 +123,9 @@ func _attack_target() -> void:
 		return
 
 	print("%s attacks %s for %d" % [name, target.name, contact_damage])
+	var body := get_node_or_null("Body")
+	if body != null and body.has_method("face_toward"):
+		body.call("face_toward", target.global_position)
 	var feedback := get_node_or_null("UnitFeedback") as UnitFeedback
 	if feedback != null:
 		feedback.play_attack_animation()
@@ -166,8 +170,16 @@ func _return_to_spawn() -> void:
 		move_and_slide()
 		return
 
-	velocity = to_spawn.normalized() * move_speed
+	var next_position := _get_path_next_position(spawn_position)
+	velocity = (next_position - global_position).normalized() * move_speed
 	move_and_slide()
+
+
+func _get_path_next_position(destination: Vector2) -> Vector2:
+	var main := get_tree().current_scene
+	if main != null and main.has_method("get_path_next_position"):
+		return main.get_path_next_position(global_position, destination)
+	return destination
 
 
 func _restore_after_leash() -> void:
@@ -193,7 +205,8 @@ func configure_level(level: int) -> void:
 	attack_cooldown = maxf(0.35, 0.95 - (float(enemy_level - 1) * 0.08))
 	if health != null:
 		health.max_health = 4 * level_multiplier
-		health.current_health = health.max_health
+		health.current_health = float(health.max_health)
+		health.health_changed.emit(health.current_health, health.max_health)
 
 	var body := get_node_or_null("Body") as CanvasItem
 	if body != null:
@@ -218,7 +231,7 @@ func _level_color(level: int) -> Color:
 			return Color(0.55, 0.0, 0.85, 1.0)
 
 
-func _on_damaged(_amount: int, source: Node) -> void:
+func _on_damaged(_amount: float, source: Node) -> void:
 	if source is Node2D:
 		force_aggro(source as Node2D)
 

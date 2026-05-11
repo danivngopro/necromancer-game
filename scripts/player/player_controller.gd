@@ -5,7 +5,7 @@ const CombatProjectileScript: Script = preload("res://scripts/visuals/combat_pro
 
 @export var move_speed: float = 180.0
 @export var attack_damage: int = 1
-@export var cast_range: float = 260.0
+@export var cast_range: float = 220.0
 @export var cast_cooldown: float = 3.0
 @export var click_enemy_radius: float = 32.0
 @export var close_cast_assist_range: float = 72.0
@@ -65,7 +65,9 @@ func _handle_movement() -> void:
 		_has_move_target = false
 		velocity = Vector2.ZERO
 	else:
-		velocity = to_target.normalized() * stats.get_move_speed()
+		var next_position := _get_path_next_position(_move_target)
+		var to_next := next_position - global_position
+		velocity = to_next.normalized() * stats.get_move_speed()
 	move_and_slide()
 
 
@@ -176,10 +178,13 @@ func _try_fire_cast() -> void:
 	if enemy_health == null:
 		return
 
-	var damage: int = attack_damage + stats.get_skeleton_damage_bonus()
+	var damage := _get_cast_damage()
 	_start_cast_cooldown()
-	GameManager.log_combat("%s casts at %s for %d" % [name, enemy.name, damage])
+	GameManager.log_combat("%s casts at %s for %s" % [name, enemy.name, _format_amount(damage)])
 	var unit_feedback := get_node_or_null("UnitFeedback") as UnitFeedback
+	var body := get_node_or_null("Body")
+	if body != null and body.has_method("face_toward"):
+		body.call("face_toward", enemy.global_position)
 	if unit_feedback != null:
 		unit_feedback.play_attack_animation()
 	var feedback: Node = _get_interaction_feedback()
@@ -189,6 +194,10 @@ func _try_fire_cast() -> void:
 	projectile.name = "CombatProjectile"
 	get_tree().current_scene.add_child(projectile)
 	projectile.launch(global_position, enemy, damage, self, Color(0.6, 0.35, 1.0, 1.0))
+
+
+func _get_cast_damage() -> float:
+	return float(attack_damage) + stats.get_player_damage_bonus()
 
 
 func _get_cast_target(click_position: Vector2) -> Node2D:
@@ -238,10 +247,17 @@ func _get_interaction_feedback() -> Node:
 	return get_tree().current_scene.get_node_or_null("InteractionFeedback")
 
 
+func _get_path_next_position(destination: Vector2) -> Vector2:
+	var main := get_tree().current_scene
+	if main != null and main.has_method("get_path_next_position"):
+		return main.get_path_next_position(global_position, destination)
+	return destination
+
+
 func _apply_stats() -> void:
 	move_speed = stats.get_move_speed()
 	health.max_health = stats.get_max_health()
-	health.current_health = mini(health.current_health, health.max_health)
+	health.current_health = minf(health.current_health, float(health.max_health))
 	health.health_changed.emit(health.current_health, health.max_health)
 
 
@@ -249,3 +265,9 @@ func _on_died(_source: Node) -> void:
 	print("%s died" % name)
 	set_physics_process(false)
 	set_process_unhandled_input(false)
+
+
+func _format_amount(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return "%d" % int(roundf(value))
+	return "%.1f" % value

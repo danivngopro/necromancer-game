@@ -75,8 +75,8 @@ func _on_player_stats_registered(stats: Node) -> void:
 	_on_stats_changed(stats)
 
 
-func _on_health_changed(current_health: int, max_health: int) -> void:
-	hp_label.text = "HP %d/%d" % [current_health, max_health]
+func _on_health_changed(current_health: float, max_health: int) -> void:
+	hp_label.text = "HP %s/%d" % [_format_amount(current_health), max_health]
 	hp_bar.max_value = max_health
 	hp_bar.value = current_health
 
@@ -89,3 +89,9 @@ func _on_black_mana_changed(current_black_mana: float, max_black_mana: int) -> v
 
 func _on_stats_changed(stats: Node) -> void:
 	regen_label.text = "Regen +%.2f/s" % stats.get_mana_regen_rate()
+
+
+func _format_amount(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return "%d" % int(roundf(value))
+	return "%.1f" % value

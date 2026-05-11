@@ -65,7 +65,15 @@ func set_name_text(label_text: String) -> void:
 		_apply_label_quality(name_label, 18)
 
 
+func set_world_resource_labels_visible(is_visible: bool) -> void:
+	for node in [health_bar, hp_label, mana_bar, mana_label, name_label]:
+		if node != null:
+			(node as CanvasItem).visible = is_visible
+
+
 func play_attack_animation() -> void:
+	if body != null and body.has_method("play_attack_once"):
+		body.call("play_attack_once")
 	_play_action_frame(2)
 
 
@@ -83,13 +91,13 @@ func _process(delta: float) -> void:
 	_set_animation_frame(idle_frame)
 
 
-func _on_health_changed(current_health: int, max_health: int) -> void:
+func _on_health_changed(current_health: float, max_health: int) -> void:
 	if health_bar != null:
 		health_bar.max_value = max_health
 		health_bar.value = current_health
 
 	if hp_label != null:
-		hp_label.text = "%d/%d" % [current_health, max_health]
+		hp_label.text = "%s/%d" % [_format_amount(current_health), max_health]
 
 
 func _on_black_mana_changed(current_black_mana: float, max_black_mana: int) -> void:
@@ -101,8 +109,8 @@ func _on_black_mana_changed(current_black_mana: float, max_black_mana: int) -> v
 		mana_label.text = "%.1f/%d" % [current_black_mana, max_black_mana]
 
 
-func _on_damaged(amount: int, source: Node) -> void:
-	print("%s took %d damage from %s" % [_unit_name(), amount, _source_name(source)])
+func _on_damaged(amount: float, source: Node) -> void:
+	print("%s took %s damage from %s" % [_unit_name(), _format_amount(amount), _source_name(source)])
 	_spawn_damage_popup(amount)
 	_hit_flash()
 	_play_action_frame(1)
@@ -111,12 +119,14 @@ func _on_damaged(amount: int, source: Node) -> void:
 
 func _on_died(source: Node) -> void:
 	print("%s died after damage from %s" % [_unit_name(), _source_name(source)])
+	if body != null and body.has_method("play_death_once"):
+		body.call("play_death_once")
 
 
-func _spawn_damage_popup(amount: int) -> void:
+func _spawn_damage_popup(amount: float) -> void:
 	var popup := Label.new()
 	popup.name = "DamagePopup"
-	popup.text = "-%d" % amount
+	popup.text = "-%s" % _format_amount(amount)
 	popup.position = popup_offset
 	popup.z_index = 50
 	popup.add_theme_color_override("font_color", Color(1.0, 0.2, 0.08, 1.0))
@@ -219,3 +229,9 @@ func _make_ui_font() -> SystemFont:
 	font.antialiasing = TextServer.FONT_ANTIALIASING_LCD
 	font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_AUTO
 	return font
+
+
+func _format_amount(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return "%d" % int(roundf(value))
+	return "%.1f" % value
